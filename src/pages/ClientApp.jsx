@@ -1147,10 +1147,9 @@ export default function ClientApp() {
     }
   };
 
-  const onglets = ["inscription", "localisation-initiale", "accueil", "catalogue", "panier", "livraison", "paiement", "suivi", "compte", "reclamations", "nouvelle-reclamation", "support"];
-
   return (
     <div
+      data-export-shell="1"
       className="flex min-h-screen w-full flex-col items-center justify-center gap-4 p-6"
       style={{ backgroundColor: "#F1E4C4", fontFamily: "Inter, system-ui, sans-serif" }}
     >
@@ -1165,20 +1164,8 @@ export default function ClientApp() {
         }
         .screen-transition { animation: screenFadeIn 0.28s ease-out; }
       `}</style>
-      <div className="flex flex-wrap justify-center gap-1.5 rounded-2xl bg-white/70 p-1.5 text-[11px] font-bold" style={{ color: "#5A4326" }}>
-        {onglets.map((s) => (
-          <button
-            key={s}
-            onClick={() => goTo(s)}
-            className="rounded-full px-2.5 py-1.5 capitalize"
-            style={{ backgroundColor: screen === s ? "#2F6B4F" : "transparent", color: screen === s ? "#FBF3E3" : "#5A4326" }}
-          >
-            {s.replace("-", " ")}
-          </button>
-        ))}
-      </div>
-
       <div
+        data-export-frame="1"
         className="flex h-[720px] w-[360px] flex-col overflow-hidden rounded-[2.5rem] border-8 shadow-2xl"
         style={{ borderColor: "#2B2620", backgroundColor: "#FBF3E3" }}
       >
