@@ -22,7 +22,7 @@ function Accueil() {
       }}
     >
       <h1 style={{ fontFamily: "Fraunces, serif", color: "#2B2620", fontSize: "1.75rem", margin: 0 }}>
-        MASTER CHICKEN MARKET
+        MON MARCHE FERMIER
       </h1>
       <p style={{ color: "#8B5E34", fontWeight: 700, margin: 0 }}>Maquettes de démonstration</p>
       <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
