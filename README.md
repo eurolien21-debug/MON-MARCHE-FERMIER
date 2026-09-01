@@ -1,4 +1,4 @@
-# MASTER CHICKEN MARKET — Maquettes
+# MON MARCHE FERMIER — Maquettes
 
 Projet React (Vite) contenant les deux maquettes cliquables :
 - `/app` — application client
