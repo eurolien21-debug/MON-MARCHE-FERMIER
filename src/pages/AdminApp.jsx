@@ -46,6 +46,23 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Icônes Leaflet par défaut (le bundler casse les chemins d'images par défaut)
+const iconLivreur = new L.DivIcon({
+  html: '<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))">🏍️</div>',
+  className: "",
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+const iconClient = new L.DivIcon({
+  html: '<div style="font-size:20px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))">📍</div>',
+  className: "",
+  iconSize: [20, 20],
+  iconAnchor: [10, 20],
+});
 
 // ---- Tokens (identiques à l'app client, pour la cohérence de marque) ----
 const INK = "#2B2620";
@@ -184,12 +201,12 @@ const PERF_LIVREURS = [
 
 // ---- Utilisateurs & Rôles ----
 const UTILISATEURS = [
-  { nom: "Dan Eurolien", role: "Super Admin", email: "dan@masterchicken.ci", statut: "Actif" },
-  { nom: "Awa Bamba", role: "Manager", email: "awa@masterchicken.ci", statut: "Actif" },
-  { nom: "Koffi N'Guessan", role: "Commercial", email: "koffi@masterchicken.ci", statut: "Actif" },
-  { nom: "Mariam Cissé", role: "Caissier", email: "mariam@masterchicken.ci", statut: "Actif" },
-  { nom: "Bakary Sanogo", role: "Stock", email: "bakary@masterchicken.ci", statut: "Inactif" },
-  { nom: "Service Client CI", role: "Service client", email: "support@masterchicken.ci", statut: "Actif" },
+  { nom: "Dan Eurolien", role: "Super Admin", email: "dan@monmarchefermier.ci", statut: "Actif" },
+  { nom: "Awa Bamba", role: "Manager", email: "awa@monmarchefermier.ci", statut: "Actif" },
+  { nom: "Koffi N'Guessan", role: "Commercial", email: "koffi@monmarchefermier.ci", statut: "Actif" },
+  { nom: "Mariam Cissé", role: "Caissier", email: "mariam@monmarchefermier.ci", statut: "Actif" },
+  { nom: "Bakary Sanogo", role: "Stock", email: "bakary@monmarchefermier.ci", statut: "Inactif" },
+  { nom: "Service Client CI", role: "Service client", email: "support@monmarchefermier.ci", statut: "Actif" },
 ];
 
 const ROLE_STYLE = {
@@ -203,6 +220,87 @@ const ROLE_STYLE = {
 };
 
 // ---- Audit ----
+// ---- Suivi live : positions GPS, commandes, preuves de paiement ----
+// NOTE: coordonnées et preuves d'exemple — à remplacer par les données
+// réelles une fois le backend (API + base de données) branché.
+const COMMANDES_GPS = [
+  {
+    id: "CMD-1042",
+    client: "Maquis Chez Awa",
+    zone: "Cocody",
+    clientPos: { lat: 5.3599, lng: -3.9878 },
+    livreur: "Fatoumata Sy",
+    livreurPos: { lat: 5.3567, lng: -3.9901 },
+    statut: "Livreur en route",
+  },
+  {
+    id: "CMD-1039",
+    client: "Panini Express",
+    zone: "Angré",
+    clientPos: { lat: 5.3803, lng: -3.9698 },
+    livreur: "Ibrahim Koné",
+    livreurPos: { lat: 5.3775, lng: -3.9722 },
+    statut: "Livreur en route",
+  },
+  {
+    id: "CMD-1041",
+    client: "Resto Le Bon Goût",
+    zone: "Marcory",
+    clientPos: { lat: 5.2926, lng: -3.9976 },
+    livreur: "Adama Traoré",
+    livreurPos: { lat: 5.2926, lng: -3.9976 },
+    statut: "Livrée",
+  },
+  {
+    id: "CMD-1040",
+    client: "Superette Diallo",
+    zone: "Yopougon",
+    clientPos: { lat: 5.3364, lng: -4.0742 },
+    livreur: null,
+    livreurPos: null,
+    statut: "En attente",
+  },
+];
+
+const PREUVES_PAIEMENT = [
+  {
+    commande: "CMD-1042",
+    client: "Maquis Chez Awa",
+    montant: 68000,
+    moyen: "Orange Money",
+    reference: "OM-2608-77413",
+    date: "Aujourd'hui, 09:12",
+    statut: "Réussi",
+  },
+  {
+    commande: "CMD-1041",
+    client: "Resto Le Bon Goût",
+    montant: 142500,
+    moyen: "Wave",
+    reference: "WV-2608-90215",
+    date: "Aujourd'hui, 08:47",
+    statut: "Réussi",
+  },
+  {
+    commande: "CMD-1040",
+    client: "Superette Diallo",
+    montant: 305000,
+    moyen: "Crédit professionnel",
+    reference: "CR-2608-00042",
+    date: "Hier, 17:20",
+    statut: "En attente",
+  },
+  {
+    commande: "CMD-1039",
+    client: "Panini Express",
+    montant: 41000,
+    moyen: "MTN MoMo",
+    reference: "MTN-2608-55871",
+    date: "Aujourd'hui, 08:02",
+    statut: "Réussi",
+  },
+];
+
 const AUDIT = [
   { qui: "Awa Bamba", quoi: "Modification du prix — Poulet de chair", quand: "Aujourd'hui, 10:32", avant: "3 400 F", apres: "3 500 F" },
   { qui: "Dan Eurolien", quoi: "Annulation commande CMD-1038", quand: "Hier, 14:02", avant: "Confirmée", apres: "Annulée" },
@@ -222,6 +320,7 @@ function Sidebar({ page, setPage }) {
     { key: "stock", label: "Produits & Stock", icon: Package },
     { key: "clients", label: "Clients", icon: Users },
     { key: "livraisons", label: "Livraisons", icon: Truck },
+    { key: "suivi-live", label: "Suivi & Paiements", icon: MapPin },
     { key: "finance", label: "Finance", icon: Wallet },
     { key: "rapports", label: "Rapports", icon: BarChart3 },
     { key: "utilisateurs", label: "Utilisateurs & Rôles", icon: UserCog },
@@ -234,7 +333,7 @@ function Sidebar({ page, setPage }) {
           🐔
         </div>
         <div>
-          <p className="text-sm font-black leading-none" style={{ color: INK }}>MASTER CHICKEN</p>
+          <p className="text-sm font-black leading-none" style={{ color: INK }}>MON MARCHE FERMIER</p>
           <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: MUTED }}>Back-office</p>
         </div>
       </div>
@@ -843,6 +942,162 @@ function UtilisateursPage() {
   );
 }
 
+function SuiviLivePage() {
+  const [selection, setSelection] = useState(null);
+  const centre = [5.35, -3.99]; // Abidjan
+
+  return (
+    <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div
+        className="mb-2 rounded-xl px-4 py-2 text-xs font-bold"
+        style={{ backgroundColor: "#FBEBD1", color: OCHRE }}
+      >
+        Données d'exemple — se branchera sur les positions GPS et confirmations de paiement réelles une fois l'API connectée.
+      </div>
+
+      <SectionTitle>Positions en direct</SectionTitle>
+      <div className="mb-6 overflow-hidden rounded-2xl border" style={{ borderColor: LINE, height: 380 }}>
+        <MapContainer center={centre} zoom={12} style={{ height: "100%", width: "100%" }}>
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {COMMANDES_GPS.map((c) => (
+            <React.Fragment key={c.id}>
+              <Marker position={[c.clientPos.lat, c.clientPos.lng]} icon={iconClient}>
+                <Popup>
+                  <strong>{c.client}</strong> — {c.id}
+                  <br />
+                  {c.clientPos.lat.toFixed(5)}, {c.clientPos.lng.toFixed(5)}
+                </Popup>
+              </Marker>
+              {c.livreurPos && (
+                <Marker position={[c.livreurPos.lat, c.livreurPos.lng]} icon={iconLivreur}>
+                  <Popup>
+                    <strong>{c.livreur}</strong> → {c.id}
+                    <br />
+                    {c.livreurPos.lat.toFixed(5)}, {c.livreurPos.lng.toFixed(5)}
+                  </Popup>
+                </Marker>
+              )}
+            </React.Fragment>
+          ))}
+        </MapContainer>
+      </div>
+
+      <SectionTitle>Commandes & positions GPS exactes</SectionTitle>
+      <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+              <th className="px-4 py-3">Commande</th>
+              <th className="px-4 py-3">Client</th>
+              <th className="px-4 py-3">Position GPS client</th>
+              <th className="px-4 py-3">Livreur</th>
+              <th className="px-4 py-3">Position GPS livreur</th>
+              <th className="px-4 py-3">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {COMMANDES_GPS.map((c) => (
+              <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
+                <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.id}</td>
+                <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{c.client}</td>
+                <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>
+                  {c.clientPos.lat.toFixed(5)}, {c.clientPos.lng.toFixed(5)}
+                </td>
+                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.livreur || "—"}</td>
+                <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>
+                  {c.livreurPos ? `${c.livreurPos.lat.toFixed(5)}, ${c.livreurPos.lng.toFixed(5)}` : "—"}
+                </td>
+                <td className="px-4 py-3"><StatutBadge statut={c.statut} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <SectionTitle>Preuves de paiement</SectionTitle>
+      <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+              <th className="px-4 py-3">Commande</th>
+              <th className="px-4 py-3">Client</th>
+              <th className="px-4 py-3">Montant</th>
+              <th className="px-4 py-3">Moyen</th>
+              <th className="px-4 py-3">Référence</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Statut</th>
+              <th className="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {PREUVES_PAIEMENT.map((p) => {
+              const s = TRX_STATUT_STYLE[p.statut];
+              return (
+                <tr key={p.commande} className="border-t" style={{ borderColor: LINE }}>
+                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{p.commande}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{p.client}</td>
+                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(p.montant)}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.moyen}</td>
+                  <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>{p.reference}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.date}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: s.bg, color: s.color }}>{p.statut}</span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => setSelection(p)}
+                      className="rounded-full px-3 py-1 text-xs font-black"
+                      style={{ backgroundColor: SAND, color: OCHRE }}
+                    >
+                      Voir la preuve
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {selection && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          style={{ backgroundColor: "rgba(43,38,32,0.5)" }}
+          onClick={() => setSelection(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-1 text-xs font-black uppercase" style={{ color: OCHRE }}>Preuve de paiement</p>
+            <p className="mb-4 text-lg font-black" style={{ color: INK }}>{selection.commande}</p>
+            <div className="mb-4 flex h-40 items-center justify-center rounded-xl" style={{ backgroundColor: SAND }}>
+              <Receipt size={40} style={{ color: OCHRE }} />
+            </div>
+            <div className="flex flex-col gap-1.5 text-sm">
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Client</span><span className="font-bold" style={{ color: INK }}>{selection.client}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Montant</span><span className="font-bold" style={{ color: INK }}>{fmt(selection.montant)}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Moyen</span><span className="font-bold" style={{ color: INK }}>{selection.moyen}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Référence</span><span className="font-mono font-bold" style={{ color: INK }}>{selection.reference}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Date</span><span className="font-bold" style={{ color: INK }}>{selection.date}</span></div>
+            </div>
+            <button
+              onClick={() => setSelection(null)}
+              className="mt-5 w-full rounded-xl py-2.5 text-sm font-black text-white"
+              style={{ backgroundColor: GREEN }}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AuditPage() {
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -872,6 +1127,7 @@ const PAGES = {
   stock: { title: "Produits & Stock", subtitle: "6 produits suivis", Comp: StockPage },
   clients: { title: "Clients", subtitle: "5 clients actifs affichés", Comp: ClientsPage },
   livraisons: { title: "Livraisons", subtitle: "8 zones · 5 livreurs", Comp: LivraisonsPage },
+  "suivi-live": { title: "Suivi & Paiements", subtitle: "Positions GPS, commandes, preuves de paiement", Comp: SuiviLivePage },
   finance: { title: "Finance", subtitle: "Rapprochements et caisse", Comp: FinancePage },
   rapports: { title: "Rapports", subtitle: "Analytics ventes, clients, livraison", Comp: RapportsPage },
   utilisateurs: { title: "Utilisateurs & Rôles", subtitle: "6 comptes internes", Comp: UtilisateursPage },
