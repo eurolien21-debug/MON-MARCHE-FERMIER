@@ -76,6 +76,27 @@ const COMMANDES_RECENTES = [
   { id: "CMD-1030", detail: "5kg cuisses + 3 plateaux d'œufs · 14 août" },
 ];
 
+const TYPES_ACTIVITE = [
+  "Boutique",
+  "Petit revendeur",
+  "Restaurant",
+  "Maquis",
+  "Point choukouya",
+  "Vendeur de poulet braisé",
+  "Vendeur de panini",
+  "Fast-food",
+  "Hôtel",
+  "Cantine",
+  "Traiteur",
+  "Superette",
+  "Vendeur de quartier",
+  "Revendeur indépendant",
+  "Particulier professionnel",
+  "Autre",
+];
+
+const COMMANDE_MINIMUM_QTE = 5; // articles
+
 // ---- Composants génériques ----
 
 function Stamp() {
@@ -130,6 +151,30 @@ function Field({ label, value, onChange, placeholder, type = "text" }) {
   );
 }
 
+function Select({ label, value, onChange, options, placeholder }) {
+  return (
+    <div className="mb-3">
+      <label className="mb-1 block text-xs font-black uppercase tracking-wide" style={{ color: "#8B5E34" }}>
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none rounded-2xl border-2 bg-white px-4 py-3 text-base font-bold outline-none"
+          style={{ borderColor: "#EEE3CE", color: value ? "#2B2620" : "#9CA3AF" }}
+        >
+          <option value="" disabled>{placeholder}</option>
+          {options.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+        <ChevronDown size={18} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" style={{ color: "#8B5E34" }} />
+      </div>
+    </div>
+  );
+}
+
 function ProductImage({ product, size = 20 }) {
   const [erreur, setErreur] = useState(false);
   const dim = `${size * 0.25}rem`;
@@ -156,22 +201,51 @@ function ProductImage({ product, size = 20 }) {
 
 // Fenêtre superposée (bottom sheet) — tout ce qui n'est pas un des 2 écrans
 // principaux passe par ici : onboarding, finaliser, compte, réclamation, support.
+function GlobalAnimStyles() {
+  return (
+    <style>{`
+      @keyframes sheetBackdropIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes sheetSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      @keyframes popIn {
+        0% { opacity: 0; transform: scale(0.6); }
+        60% { opacity: 1; transform: scale(1.08); }
+        100% { transform: scale(1); }
+      }
+      @keyframes bump {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.18); }
+        100% { transform: scale(1); }
+      }
+      @keyframes checkDraw {
+        from { stroke-dashoffset: 24; }
+        to { stroke-dashoffset: 0; }
+      }
+      .sheet-backdrop { animation: sheetBackdropIn 0.22s ease-out; }
+      .sheet-panel { animation: sheetSlideUp 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+      .anim-pop { animation: popIn 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+      .anim-bump { animation: bump 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+      .btn-tap { transition: transform 0.12s ease-out; }
+      .btn-tap:active { transform: scale(0.94); }
+    `}</style>
+  );
+}
+
 function Sheet({ open, onClose, title, onBack, children, closable = true }) {
   if (!open) return null;
   return (
     <div
-      className="absolute inset-0 z-40 flex flex-col justify-end"
+      className="sheet-backdrop absolute inset-0 z-40 flex flex-col justify-end"
       style={{ backgroundColor: "rgba(43,38,32,0.5)" }}
       onClick={closable ? onClose : undefined}
     >
       <div
-        className="flex max-h-[94%] flex-col overflow-hidden rounded-t-[2rem]"
+        className="sheet-panel flex max-h-[94%] flex-col overflow-hidden rounded-t-[2rem]"
         style={{ backgroundColor: "#FBF3E3" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 px-5 pb-2 pt-4" style={{ color: "#2B2620" }}>
           {onBack && (
-            <button onClick={onBack} className="rounded-full p-1">
+            <button onClick={onBack} className="btn-tap rounded-full p-1">
               <ChevronLeft size={22} strokeWidth={3} />
             </button>
           )}
@@ -179,7 +253,7 @@ function Sheet({ open, onClose, title, onBack, children, closable = true }) {
             {title}
           </h2>
           {closable && (
-            <button onClick={onClose} aria-label="Fermer" className="rounded-full p-1.5" style={{ backgroundColor: "#F1E4C4" }}>
+            <button onClick={onClose} aria-label="Fermer" className="btn-tap rounded-full p-1.5" style={{ backgroundColor: "#F1E4C4" }}>
               <X size={16} strokeWidth={3} style={{ color: "#5A4326" }} />
             </button>
           )}
@@ -229,8 +303,9 @@ function CarteTrajet({ progression }) {
 
 // ---- Fenêtre : Inscription (téléphone → OTP → profil → localisation) ----
 function OnboardingSheet({ open, profil, setProfil, adresses, setAdresses, onTermine }) {
-  const [etape, setEtape] = useState("telephone");
+  const [etape, setEtape] = useState("identite");
   const [otp, setOtp] = useState("");
+  const [codeEnvoye, setCodeEnvoye] = useState(false);
   const [statutGPS, setStatutGPS] = useState("idle");
   const [position, setPosition] = useState(null);
 
@@ -243,41 +318,45 @@ function OnboardingSheet({ open, profil, setProfil, adresses, setAdresses, onTer
   };
 
   return (
-    <Sheet open={open} closable={false} title={
-      etape === "telephone" ? "Bienvenue" : etape === "otp" ? "Vérification" : etape === "profil" ? "Votre commerce" : "Votre position"
-    }>
-      {etape === "telephone" && (
+    <Sheet open={open} closable={false} title={etape === "identite" ? "Bienvenue" : "Votre commerce"}>
+      {etape === "identite" && (
         <div className="flex flex-col px-5 pb-6">
           <p className="mb-4 text-sm font-bold" style={{ color: "#8B5E34" }}>
             Entrez votre numéro pour démarrer. C'est rapide, pas de mot de passe à retenir.
           </p>
-          <Field label="Numéro de téléphone" value={profil.telephone} onChange={(v) => setProfil({ ...profil, telephone: v })} placeholder="Ex : 07 00 00 00 00" type="tel" />
-          <BigButton disabled={!profil.telephone} onClick={() => setEtape("otp")}>Recevoir le code</BigButton>
-        </div>
-      )}
-      {etape === "otp" && (
-        <div className="flex flex-col px-5 pb-6">
-          <p className="mb-4 text-sm font-bold" style={{ color: "#8B5E34" }}>Un code a été envoyé au {profil.telephone}.</p>
-          <Field label="Code reçu par SMS" value={otp} onChange={setOtp} placeholder="• • • •" />
-          <BigButton disabled={otp.length < 4} onClick={() => setEtape("profil")}>Valider</BigButton>
+          <Field
+            label="Numéro de téléphone"
+            value={profil.telephone}
+            onChange={(v) => setProfil({ ...profil, telephone: v })}
+            placeholder="Ex : 07 00 00 00 00"
+            type="tel"
+          />
+          {!codeEnvoye ? (
+            <BigButton disabled={!profil.telephone} onClick={() => setCodeEnvoye(true)}>Recevoir le code</BigButton>
+          ) : (
+            <>
+              <p className="mb-3 -mt-1 text-xs font-bold" style={{ color: "#8B5E34" }}>Un code a été envoyé au {profil.telephone}.</p>
+              <Field label="Code reçu par SMS" value={otp} onChange={setOtp} placeholder="• • • •" />
+              <BigButton disabled={otp.length < 4} onClick={() => setEtape("profil")}>Valider</BigButton>
+            </>
+          )}
         </div>
       )}
       {etape === "profil" && (
         <div className="flex flex-col px-5 pb-6">
           <p className="mb-4 text-sm font-bold" style={{ color: "#8B5E34" }}>
-            Optionnel, vous pourrez le compléter plus tard dans "Mon compte".
+            Dernière étape avant de commander.
           </p>
           <Field label="Nom du commerce" value={profil.commerce} onChange={(v) => setProfil({ ...profil, commerce: v })} placeholder="Ex : Maquis Chez Awa" />
-          <Field label="Type d'activité" value={profil.type} onChange={(v) => setProfil({ ...profil, type: v })} placeholder="Ex : Maquis, boutique, restaurant..." />
-          <div className="flex gap-3">
-            <BigButton tone="ghost" full={false} onClick={() => setEtape("localisation")}>Passer</BigButton>
-            <BigButton onClick={() => setEtape("localisation")}>Continuer</BigButton>
-          </div>
-        </div>
-      )}
-      {etape === "localisation" && (
-        <div className="flex flex-col px-5 pb-6">
-          <p className="mb-4 text-sm font-bold" style={{ color: "#8B5E34" }}>Où se trouve votre commerce ?</p>
+          <Select
+            label="Type d'activité"
+            value={profil.type}
+            onChange={(v) => setProfil({ ...profil, type: v })}
+            options={TYPES_ACTIVITE}
+            placeholder="Choisissez une catégorie"
+          />
+
+          <p className="mb-2 mt-1 text-xs font-black uppercase tracking-wide" style={{ color: "#8B5E34" }}>Où êtes-vous ?</p>
           {statutGPS !== "trouve" ? (
             <button onClick={localiser} className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-4" style={{ backgroundColor: "#2F6B4F" }}>
               {statutGPS === "chargement" ? <Loader2 size={22} className="animate-spin" color="#FBF3E3" /> : <LocateFixed size={22} color="#FBF3E3" />}
@@ -391,7 +470,7 @@ function FinaliserSheet({ open, onClose, panier, livraison, setLivraison, adress
           <span>Total à payer</span>
           <span>{total.toLocaleString("fr-FR")} F</span>
         </div>
-        <BigButton disabled={!livraison} onClick={() => { setDernierPaiement(choixPaiement); onConfirmer(); }}>
+        <BigButton disabled={!livraison || items.reduce((s, i) => s + i.q, 0) < COMMANDE_MINIMUM_QTE} onClick={() => { setDernierPaiement(choixPaiement); onConfirmer(); }}>
           Confirmer la commande
         </BigButton>
       </div>
@@ -414,6 +493,7 @@ function CompteSheet({ open, onClose, profil, setProfil }) {
           </div>
         </div>
         <Field label="Nom du commerce" value={profil.commerce} onChange={(v) => setProfil({ ...profil, commerce: v })} placeholder="Ex : Maquis Chez Awa" />
+        <Select label="Type d'activité" value={profil.type} onChange={(v) => setProfil({ ...profil, type: v })} options={TYPES_ACTIVITE} placeholder="Choisissez une catégorie" />
         <Field label="Téléphone" value={profil.telephone} onChange={(v) => setProfil({ ...profil, telephone: v })} placeholder="Ex : 07 00 00 00 00" type="tel" />
         <div className="mt-2 flex flex-col gap-2">
           <button className="flex items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 text-left" style={{ borderColor: "#EEE3CE" }}>
@@ -451,7 +531,7 @@ function ReclamationSheet({ open, onClose, onEnvoyer }) {
     <Sheet open={open} onClose={onClose} title={envoye ? "Envoyé" : "Signaler un problème"}>
       {envoye ? (
         <div className="flex flex-col items-center gap-3 px-8 pb-8 pt-4 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: "#E4EEE8" }}>
+          <div className="anim-pop flex h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: "#E4EEE8" }}>
             <CheckCircle2 size={32} style={{ color: "#2F6B4F" }} />
           </div>
           <p className="text-lg font-black" style={{ color: "#2B2620" }}>Réclamation envoyée</p>
@@ -559,8 +639,8 @@ function BottomNav2({ ecran, setEcran, badge }) {
   return (
     <div className="mt-auto grid grid-cols-2 border-t bg-white px-1 pb-3 pt-2" style={{ borderColor: "#EEE3CE" }}>
       {items.map(({ key, label, icon: Icon }) => (
-        <button key={key} onClick={() => setEcran(key)} className="relative flex flex-col items-center gap-1" style={{ color: ecran === key ? "#2F6B4F" : "#B8AC94" }}>
-          <Icon size={22} strokeWidth={ecran === key ? 2.8 : 2} />
+        <button key={key} onClick={() => setEcran(key)} className="btn-tap relative flex flex-col items-center gap-1" style={{ color: ecran === key ? "#2F6B4F" : "#B8AC94" }}>
+          <Icon key={ecran === key ? key : "off"} className={ecran === key ? "anim-bump" : ""} size={22} strokeWidth={ecran === key ? 2.8 : 2} />
           <span className="text-[11px] font-bold leading-none">{label}</span>
           {key === "espace" && badge && (
             <span className="absolute -right-1 top-0 h-2 w-2 rounded-full" style={{ backgroundColor: "#C1443B" }} />
@@ -621,16 +701,16 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
               <p className="text-xs font-bold" style={{ color: "#8B5E34" }}>{p.prix.toLocaleString("fr-FR")} F / {p.unite}</p>
               {panier[p.id] ? (
                 <div className="mt-2 flex items-center gap-3">
-                  <button onClick={() => changeQty(p.id, -1)} className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#F1E4C4", color: "#2B2620" }}>
+                  <button onClick={() => changeQty(p.id, -1)} className="btn-tap flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#F1E4C4", color: "#2B2620" }}>
                     <Minus size={18} strokeWidth={3} />
                   </button>
-                  <span className="w-5 text-center text-lg font-black" style={{ color: "#2B2620" }}>{panier[p.id]}</span>
-                  <button onClick={() => changeQty(p.id, 1)} className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#2F6B4F", color: "#FBF3E3" }}>
+                  <span key={panier[p.id]} className="anim-bump w-5 text-center text-lg font-black" style={{ color: "#2B2620" }}>{panier[p.id]}</span>
+                  <button onClick={() => changeQty(p.id, 1)} className="btn-tap flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#2F6B4F", color: "#FBF3E3" }}>
                     <Plus size={18} strokeWidth={3} />
                   </button>
                 </div>
               ) : (
-                <button onClick={() => changeQty(p.id, 1)} className="mt-2 flex h-9 w-full items-center justify-center gap-1 rounded-full text-sm font-black" style={{ backgroundColor: "#E8A23D", color: "#2B2620" }}>
+                <button onClick={() => changeQty(p.id, 1)} className="btn-tap mt-2 flex h-9 w-full items-center justify-center gap-1 rounded-full text-sm font-black" style={{ backgroundColor: "#E8A23D", color: "#2B2620" }}>
                   <Plus size={16} strokeWidth={3} /> Ajouter
                 </button>
               )}
@@ -642,7 +722,7 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
       {nbArticles > 0 && (
         <div className="border-t bg-white px-5 pt-3" style={{ borderColor: "#EEE3CE" }}>
           <button onClick={() => setPanierOuvert((v) => !v)} className="mb-3 flex w-full items-center justify-between">
-            <span className="text-sm font-black" style={{ color: "#2B2620" }}>{nbArticles} article{nbArticles > 1 ? "s" : ""} · {total.toLocaleString("fr-FR")} F</span>
+            <span key={total} className="anim-bump text-sm font-black" style={{ color: "#2B2620" }}>{nbArticles} article{nbArticles > 1 ? "s" : ""} · {total.toLocaleString("fr-FR")} F</span>
             <span className="flex items-center gap-1 text-xs font-black" style={{ color: "#2F6B4F" }}>
               {panierOuvert ? "Réduire" : "Voir le panier"}
               <ChevronDown size={16} style={{ transform: panierOuvert ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -662,7 +742,16 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
             </div>
           )}
           <div className="pb-4">
-            <BigButton icon={ShoppingCart} onClick={onContinuer}>Continuer</BigButton>
+            {nbArticles < COMMANDE_MINIMUM_QTE ? (
+              <>
+                <p className="mb-2 text-center text-xs font-bold" style={{ color: "#C1443B" }}>
+                  Commande minimum {COMMANDE_MINIMUM_QTE} articles — il manque {COMMANDE_MINIMUM_QTE - nbArticles} article{COMMANDE_MINIMUM_QTE - nbArticles > 1 ? "s" : ""}
+                </p>
+                <BigButton icon={ShoppingCart} disabled>Continuer</BigButton>
+              </>
+            ) : (
+              <BigButton icon={ShoppingCart} onClick={onContinuer}>Continuer</BigButton>
+            )}
           </div>
         </div>
       )}
@@ -705,7 +794,7 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, reclamations, o
             <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: "#8B5E34" }}>Commande en cours</p>
             <CarteTrajet progression={progressionTrajet} />
             <div className="mb-2 flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "#2F6B4F" }}>
-              {livree ? <CheckCircle2 size={24} color="#FBF3E3" /> : <Truck size={24} color="#FBF3E3" />}
+              {livree ? <CheckCircle2 key="done" className="anim-pop" size={24} color="#FBF3E3" /> : <Truck size={24} color="#FBF3E3" />}
               <p className="text-sm font-black text-white">{livree ? "Livrée — merci pour votre commande !" : `Environ ${minutesRestantes} min`}</p>
             </div>
             <div className="mb-5 flex flex-col">
@@ -713,8 +802,8 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, reclamations, o
                 const fait = idx <= etapeActuelleIdx;
                 return (
                   <div key={e.label} className="flex items-center gap-2 py-1">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full" style={{ backgroundColor: fait ? "#2F6B4F" : "#EEE3CE" }}>
-                      {fait && <CheckCircle2 size={12} color="#FBF3E3" />}
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full transition-colors duration-300" style={{ backgroundColor: fait ? "#2F6B4F" : "#EEE3CE" }}>
+                      {fait && <CheckCircle2 key={idx} className="anim-pop" size={12} color="#FBF3E3" />}
                     </div>
                     <span className="text-xs font-bold" style={{ color: fait ? "#2B2620" : "#B8AC94" }}>{e.label}</span>
                   </div>
@@ -788,6 +877,7 @@ export default function ClientApp() {
       style={{ backgroundColor: "#F1E4C4", fontFamily: "Inter, system-ui, sans-serif" }}
     >
       <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet" />
+      <GlobalAnimStyles />
 
       <div
         data-export-frame="1"
