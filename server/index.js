@@ -180,7 +180,7 @@ app.post("/api/orders", async (req, res) => {
     // Numéro de commande séquentiel simple basé sur l'id (généré après insertion)
     const orderResult = await client.query(
       `INSERT INTO orders (numero, customer_id, zone, adresse_label, adresse_detail, sous_total, frais_livraison, total, moyen_paiement, statut, statut_paiement)
-       VALUES ('TEMP', $1,$2,$3,$4,$5,$6,$7,'En attente','En attente')
+       VALUES ('TEMP', $1,$2,$3,$4,$5,$6,$7,$8,'En attente','En attente')
        RETURNING id`,
       [customerId, zone || null, adresse_label || null, adresse_detail || null, sousTotal, fraisLivraison, total, moyen_paiement || null]
     );
