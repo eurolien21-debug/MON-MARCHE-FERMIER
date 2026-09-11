@@ -25,6 +25,8 @@ export const api = {
   enregistrerClient: (client) => requete("/api/customers", { method: "POST", body: JSON.stringify(client) }),
   commandes: () => requete("/api/orders"),
   commande: (id) => requete(`/api/orders/${id}`),
+  commandeParNumero: (numero) => requete(`/api/orders?numero=${encodeURIComponent(numero)}`),
+  majPosition: (id, position) => requete(`/api/orders/${id}/position`, { method: "PATCH", body: JSON.stringify(position) }),
   creerCommande: (commande) => requete("/api/orders", { method: "POST", body: JSON.stringify(commande) }),
   majCommande: (id, champs) => requete(`/api/orders/${id}`, { method: "PATCH", body: JSON.stringify(champs) }),
 };
