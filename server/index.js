@@ -111,6 +111,16 @@ app.post("/api/customers", async (req, res) => {
 // ---- Commandes ----
 app.get("/api/orders", async (req, res) => {
   try {
+    const { numero } = req.query;
+    if (numero) {
+      const { rows } = await pool.query(
+        `SELECT o.*, c.commerce AS client_nom, c.telephone AS client_telephone
+         FROM orders o LEFT JOIN customers c ON c.id = o.customer_id
+         WHERE o.numero = $1`,
+        [numero]
+      );
+      return res.json(rows[0] || null);
+    }
     const { rows } = await pool.query(`
       SELECT o.*, c.commerce AS client_nom, c.telephone AS client_telephone
       FROM orders o
@@ -134,6 +144,27 @@ app.get("/api/orders/:id", async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ erreur: "Commande introuvable" });
     const { rows: items } = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [req.params.id]);
     res.json({ ...rows[0], items });
+  } catch (err) {
+    res.status(500).json({ erreur: err.message });
+  }
+});
+
+// Mise à jour de la position GPS réelle du livreur (appelée en continu depuis l'app livreur)
+app.patch("/api/orders/:id/position", async (req, res) => {
+  const { lat, lng, livreur_nom } = req.body;
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    return res.status(400).json({ erreur: "lat et lng (nombres) sont requis" });
+  }
+  try {
+    const { rows } = await pool.query(
+      `UPDATE orders
+       SET livreur_lat = $1, livreur_lng = $2, livreur_nom = COALESCE($3, livreur_nom), position_maj_a = now()
+       WHERE id = $4
+       RETURNING *`,
+      [lat, lng, livreur_nom || null, req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ erreur: "Commande introuvable" });
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ erreur: err.message });
   }
