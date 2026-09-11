@@ -58,6 +58,12 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+
+-- Position GPS réelle du livreur, mise à jour depuis l'app livreur.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS livreur_nom TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS livreur_lat DOUBLE PRECISION;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS livreur_lng DOUBLE PRECISION;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS position_maj_a TIMESTAMPTZ;
 `;
 
 async function migrate() {
