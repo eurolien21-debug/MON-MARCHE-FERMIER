@@ -918,8 +918,6 @@ export default function ClientApp() {
         adresse_detail: position.detail,
       });
     } catch (e) {
-      // On n'empêche pas l'accès à l'app si l'enregistrement échoue,
-      // mais l'info ne sera pas visible côté back-office.
       console.error("Échec de l'enregistrement du client :", e.message);
     }
     setAdresses((prev) => [...prev, position]);
@@ -941,7 +939,6 @@ export default function ClientApp() {
     setCommandeEnCours(true);
     setPanier({});
     setEcran("espace");
-    // Rafraîchir le catalogue pour refléter le stock réellement déduit.
     api.produits().then((rows) => {
       setProduits(rows.map((r) => ({ id: r.slug, dbId: r.id, nom: r.nom, emoji: r.emoji, photo: r.photo, prix: r.prix, unite: r.unite, stock: r.stock })));
     }).catch(() => {});
