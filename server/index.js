@@ -158,7 +158,8 @@ app.patch("/api/orders/:id/position", async (req, res) => {
   try {
     const { rows } = await pool.query(
       `UPDATE orders
-       SET livreur_lat = $1, livreur_lng = $2, livreur_nom = COALESCE($3, livreur_nom), position_maj_a = now()
+       SET livreur_lat = $1, livreur_lng = $2, livreur_nom = COALESCE($3, livreur_nom), position_maj_a = now(),
+           statut = CASE WHEN statut IN ('Livrée', 'Annulée') THEN statut ELSE 'Livreur en route' END
        WHERE id = $4
        RETURNING *`,
       [lat, lng, livreur_nom || null, req.params.id]
