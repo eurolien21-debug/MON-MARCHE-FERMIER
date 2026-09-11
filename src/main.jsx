@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import ClientApp from "./pages/ClientApp.jsx";
 import AdminApp from "./pages/AdminApp.jsx";
+import LivreurApp from "./pages/LivreurApp.jsx";
 import "./index.css";
 
 function Accueil() {
@@ -52,6 +53,19 @@ function Accueil() {
         >
           Back-office
         </Link>
+        <Link
+          to="/livreur"
+          style={{
+            backgroundColor: "#8B5E34",
+            color: "#FBF3E3",
+            padding: "0.9rem 1.6rem",
+            borderRadius: "1rem",
+            fontWeight: 900,
+            textDecoration: "none",
+          }}
+        >
+          App livreur
+        </Link>
       </div>
     </div>
   );
@@ -64,6 +78,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/" element={<Accueil />} />
         <Route path="/app" element={<ClientApp />} />
         <Route path="/admin" element={<AdminApp />} />
+        <Route path="/livreur" element={<LivreurApp />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
