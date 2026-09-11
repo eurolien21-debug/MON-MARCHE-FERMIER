@@ -774,29 +774,25 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
 
 // ---- Écran 2 : Mon espace (suivi + historique + réclamations + support) ----
 function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommande, reclamations, onNouvelleReclamation, onSupport }) {
-  const ETAPES = [
-    { label: "Commande reçue", seuil: 0 },
-    { label: "Paiement confirmé", seuil: 0 },
-    { label: "En préparation", seuil: 0 },
-    { label: "Livreur affecté", seuil: 3 },
-    { label: "Livreur en route", seuil: 6 },
-    { label: "Livreur proche", seuil: 14 },
-    { label: "Livrée", seuil: 20 },
-  ];
-  const DUREE_TOTALE = 20;
-  const [ecoule, setEcoule] = useState(0);
+  const [commandeLive, setCommandeLive] = useState(null);
 
   useEffect(() => {
-    if (!commandeEnCours) { setEcoule(0); return; }
-    if (ecoule >= DUREE_TOTALE) return;
-    const t = setInterval(() => setEcoule((e) => Math.min(e + 1, DUREE_TOTALE)), 500);
-    return () => clearInterval(t);
-  }, [ecoule, commandeEnCours]);
+    if (!commandeEnCours || !derniereCommande) return;
+    let annule = false;
+    const rafraichir = () => {
+      api.commande(derniereCommande.id).then((c) => { if (!annule) setCommandeLive(c); }).catch(() => {});
+    };
+    rafraichir();
+    const t = setInterval(rafraichir, 6000);
+    return () => { annule = true; clearInterval(t); };
+  }, [commandeEnCours, derniereCommande]);
 
-  const etapeActuelleIdx = ETAPES.reduce((acc, e, idx) => (ecoule >= e.seuil ? idx : acc), 0);
-  const livree = ecoule >= DUREE_TOTALE;
-  const minutesRestantes = Math.max(0, Math.ceil(12 * (1 - ecoule / DUREE_TOTALE)));
-  const progressionTrajet = Math.min(1, Math.max(0, (ecoule - 6) / (DUREE_TOTALE - 6)));
+  const statut = commandeLive?.statut || "En attente";
+  const livree = statut === "Livrée";
+  const aPosition = commandeLive?.livreur_lat != null && commandeLive?.livreur_lng != null;
+  const secondesDepuisMaj = commandeLive?.position_maj_a
+    ? Math.max(0, Math.round((Date.now() - new Date(commandeLive.position_maj_a).getTime()) / 1000))
+    : null;
 
   return (
     <div className="flex h-full flex-col">
@@ -807,23 +803,29 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommand
             <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: "#8B5E34" }}>
               Commande en cours{derniereCommande ? ` — ${derniereCommande.numero}` : ""}
             </p>
-            <CarteTrajet progression={progressionTrajet} />
-            <div className="mb-2 flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "#2F6B4F" }}>
+
+            {aPosition ? (
+              <div className="relative mb-3 overflow-hidden rounded-2xl" style={{ height: "180px", backgroundColor: "#F1E4C4" }}>
+                <iframe
+                  title="Position du livreur"
+                  className="h-full w-full border-0"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${commandeLive.livreur_lng - 0.01}%2C${commandeLive.livreur_lat - 0.01}%2C${commandeLive.livreur_lng + 0.01}%2C${commandeLive.livreur_lat + 0.01}&layer=mapnik&marker=${commandeLive.livreur_lat}%2C${commandeLive.livreur_lng}`}
+                />
+                <div className="absolute bottom-0 left-0 right-0 px-3 py-1.5" style={{ background: "linear-gradient(transparent, rgba(43,38,32,0.7))" }}>
+                  <p className="text-[11px] font-bold text-white">
+                    {commandeLive.livreur_nom ? `${commandeLive.livreur_nom} · ` : ""}position mise à jour il y a {secondesDepuisMaj}s
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-3 rounded-2xl px-4 py-4 text-center" style={{ backgroundColor: "#F1E4C4" }}>
+                <p className="text-sm font-bold" style={{ color: "#5A4326" }}>Position du livreur pas encore disponible</p>
+              </div>
+            )}
+
+            <div className="mb-5 flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "#2F6B4F" }}>
               {livree ? <CheckCircle2 key="done" className="anim-pop" size={24} color="#FBF3E3" /> : <Truck size={24} color="#FBF3E3" />}
-              <p className="text-sm font-black text-white">{livree ? "Livrée — merci pour votre commande !" : `Environ ${minutesRestantes} min`}</p>
-            </div>
-            <div className="mb-5 flex flex-col">
-              {ETAPES.map((e, idx) => {
-                const fait = idx <= etapeActuelleIdx;
-                return (
-                  <div key={e.label} className="flex items-center gap-2 py-1">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full transition-colors duration-300" style={{ backgroundColor: fait ? "#2F6B4F" : "#EEE3CE" }}>
-                      {fait && <CheckCircle2 key={idx} className="anim-pop" size={12} color="#FBF3E3" />}
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: fait ? "#2B2620" : "#B8AC94" }}>{e.label}</span>
-                  </div>
-                );
-              })}
+              <p className="text-sm font-black text-white">{statut}</p>
             </div>
           </>
         ) : (
