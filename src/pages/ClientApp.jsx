@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Home,
   ShoppingCart,
@@ -28,7 +28,7 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
-import { api } from "../api.js";
+import { api, calculerItineraire } from "../api.js";
 
 // ---- Données ----
 // Les produits ne sont plus codés en dur : ils sont chargés depuis l'API
@@ -110,6 +110,34 @@ function sauvegarderEtat(etat) {
   } catch {
     // stockage indisponible : on continue sans bloquer l'app
   }
+}
+
+// Demande la vraie position GPS de l'appareil, puis tente de la transformer
+// en adresse lisible (service gratuit OpenStreetMap, sans clé requise).
+async function obtenirPositionReelle(labelParDefaut) {
+  const position = await new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("La géolocalisation n'est pas disponible sur cet appareil."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 10000,
+    });
+  });
+  const { latitude: lat, longitude: lng } = position.coords;
+  let detail = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.display_name) detail = data.display_name;
+    }
+  } catch {
+    // adresse lisible indisponible : on garde les coordonnées brutes, ce n'est pas bloquant
+  }
+  return { label: labelParDefaut, detail, lat, lng };
 }
 
 // ---- Composants génériques ----
@@ -323,13 +351,19 @@ function OnboardingSheet({ open, profil, setProfil, adresses, setAdresses, onTer
   const [codeEnvoye, setCodeEnvoye] = useState(false);
   const [statutGPS, setStatutGPS] = useState("idle");
   const [position, setPosition] = useState(null);
+  const [erreurGPS, setErreurGPS] = useState(null);
 
-  const localiser = () => {
+  const localiser = async () => {
     setStatutGPS("chargement");
-    setTimeout(() => {
+    setErreurGPS(null);
+    try {
+      const pos = await obtenirPositionReelle("Ma boutique");
+      setPosition(pos);
       setStatutGPS("trouve");
-      setPosition({ label: "Ma boutique", detail: "Cocody, Rue des Jardins" });
-    }, 1200);
+    } catch (e) {
+      setErreurGPS(e.message || "Impossible d'obtenir votre position.");
+      setStatutGPS("idle");
+    }
   };
 
   return (
@@ -372,6 +406,7 @@ function OnboardingSheet({ open, profil, setProfil, adresses, setAdresses, onTer
           />
 
           <p className="mb-2 mt-1 text-xs font-black uppercase tracking-wide" style={{ color: "#8B5E34" }}>Où êtes-vous ?</p>
+          {erreurGPS && <p className="mb-2 text-xs font-bold" style={{ color: "#C1443B" }}>{erreurGPS}</p>}
           {statutGPS !== "trouve" ? (
             <button onClick={localiser} className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-4" style={{ backgroundColor: "#2F6B4F" }}>
               {statutGPS === "chargement" ? <Loader2 size={22} className="animate-spin" color="#FBF3E3" /> : <LocateFixed size={22} color="#FBF3E3" />}
@@ -406,6 +441,7 @@ function FinaliserSheet({ open, onClose, panier, produits, livraison, setLivrais
   const [adresseOuverte, setAdresseOuverte] = useState(!livraison);
   const [choixPaiement, setChoixPaiement] = useState(dernierPaiement || "orange");
   const [statutGPS, setStatutGPS] = useState("idle");
+  const [erreurGPS, setErreurGPS] = useState(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [erreurEnvoi, setErreurEnvoi] = useState(null);
 
@@ -418,13 +454,18 @@ function FinaliserSheet({ open, onClose, panier, produits, livraison, setLivrais
   const fraisLivraison = sousTotal > 0 ? 1000 : 0;
   const total = sousTotal + fraisLivraison;
 
-  const localiser = () => {
+  const localiser = async () => {
     setStatutGPS("chargement");
-    setTimeout(() => {
-      setStatutGPS("idle");
-      setLivraison({ label: "Position actuelle", detail: "Cocody, Rue des Jardins" });
+    setErreurGPS(null);
+    try {
+      const pos = await obtenirPositionReelle("Position actuelle");
+      setLivraison(pos);
       setAdresseOuverte(false);
-    }, 1000);
+      setStatutGPS("idle");
+    } catch (e) {
+      setErreurGPS(e.message || "Impossible d'obtenir votre position.");
+      setStatutGPS("idle");
+    }
   };
 
   const optionsPaiement = [
@@ -450,6 +491,7 @@ function FinaliserSheet({ open, onClose, panier, produits, livraison, setLivrais
           </button>
         ) : (
           <div className="mb-5">
+            {erreurGPS && <p className="mb-2 text-xs font-bold" style={{ color: "#C1443B" }}>{erreurGPS}</p>}
             <button onClick={localiser} className="mb-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5" style={{ backgroundColor: "#2F6B4F" }}>
               {statutGPS === "chargement" ? <Loader2 size={20} className="animate-spin" color="#FBF3E3" /> : <LocateFixed size={20} color="#FBF3E3" />}
               <span className="font-black" style={{ color: "#FBF3E3" }}>{statutGPS === "chargement" ? "Recherche..." : "Utiliser ma position actuelle"}</span>
@@ -497,6 +539,8 @@ function FinaliserSheet({ open, onClose, panier, produits, livraison, setLivrais
                 items: items.map((i) => ({ product_id: i.dbId, quantite: i.q })),
                 adresse_label: livraison.label,
                 adresse_detail: livraison.detail,
+                adresse_lat: livraison.lat,
+                adresse_lng: livraison.lng,
                 zone: livraison.label,
                 moyen_paiement: choixPaiement,
               });
@@ -802,21 +846,53 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
 // ---- Écran 2 : Mon espace (suivi + historique + réclamations + support) ----
 function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommande, reclamations, onNouvelleReclamation, onSupport }) {
   const [commandeLive, setCommandeLive] = useState(null);
+  const [itineraire, setItineraire] = useState(null);
+  const [erreurItineraire, setErreurItineraire] = useState(null);
+  const distanceInitialeRef = useRef(null);
+
+  useEffect(() => {
+    distanceInitialeRef.current = null;
+  }, [derniereCommande?.id]);
 
   useEffect(() => {
     if (!commandeEnCours || !derniereCommande) return;
     let annule = false;
-    const rafraichir = () => {
-      api.commande(derniereCommande.id).then((c) => { if (!annule) setCommandeLive(c); }).catch(() => {});
+    const rafraichir = async () => {
+      try {
+        const c = await api.commande(derniereCommande.id);
+        if (annule) return;
+        setCommandeLive(c);
+        if (c.livreur_lat != null && c.livreur_lng != null && c.client_lat != null && c.client_lng != null) {
+          try {
+            const itin = await calculerItineraire(c.livreur_lat, c.livreur_lng, c.client_lat, c.client_lng);
+            if (annule) return;
+            if (distanceInitialeRef.current == null || itin.distanceMetres > distanceInitialeRef.current) {
+              distanceInitialeRef.current = itin.distanceMetres;
+            }
+            setItineraire(itin);
+            setErreurItineraire(null);
+          } catch {
+            if (!annule) setErreurItineraire("Temps estimé indisponible pour le moment");
+          }
+        }
+      } catch {
+        // la commande n'a pas pu être rafraîchie cette fois-ci : on réessaiera au prochain cycle
+      }
     };
     rafraichir();
-    const t = setInterval(rafraichir, 6000);
+    const t = setInterval(rafraichir, 8000);
     return () => { annule = true; clearInterval(t); };
   }, [commandeEnCours, derniereCommande]);
 
   const statut = commandeLive?.statut || "En attente";
   const livree = statut === "Livrée";
   const aPosition = commandeLive?.livreur_lat != null && commandeLive?.livreur_lng != null;
+  const aDestinationGPS = commandeLive?.client_lat != null && commandeLive?.client_lng != null;
+  const progression = itineraire && distanceInitialeRef.current
+    ? Math.min(1, Math.max(0, 1 - itineraire.distanceMetres / distanceInitialeRef.current))
+    : 0;
+  const minutesRestantes = itineraire ? Math.max(1, Math.round(itineraire.dureeSecondes / 60)) : null;
+  const kmRestants = itineraire ? (itineraire.distanceMetres / 1000).toFixed(1) : null;
   const secondesDepuisMaj = commandeLive?.position_maj_a
     ? Math.max(0, Math.round((Date.now() - new Date(commandeLive.position_maj_a).getTime()) / 1000))
     : null;
@@ -832,28 +908,37 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommand
             </p>
 
             {aPosition ? (
-              <div className="relative mb-3 overflow-hidden rounded-2xl" style={{ height: "180px", backgroundColor: "#F1E4C4" }}>
-                <iframe
-                  title="Position du livreur"
-                  className="h-full w-full border-0"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${commandeLive.livreur_lng - 0.01}%2C${commandeLive.livreur_lat - 0.01}%2C${commandeLive.livreur_lng + 0.01}%2C${commandeLive.livreur_lat + 0.01}&layer=mapnik&marker=${commandeLive.livreur_lat}%2C${commandeLive.livreur_lng}`}
-                />
-                <div className="absolute bottom-0 left-0 right-0 px-3 py-1.5" style={{ background: "linear-gradient(transparent, rgba(43,38,32,0.7))" }}>
-                  <p className="text-[11px] font-bold text-white">
+              <>
+                <CarteTrajet progression={progression} />
+                {secondesDepuisMaj != null && (
+                  <p className="-mt-2 mb-3 text-center text-[11px] font-bold" style={{ color: "#8B5E34" }}>
                     {commandeLive.livreur_nom ? `${commandeLive.livreur_nom} · ` : ""}position mise à jour il y a {secondesDepuisMaj}s
                   </p>
-                </div>
-              </div>
+                )}
+              </>
             ) : (
               <div className="mb-3 rounded-2xl px-4 py-4 text-center" style={{ backgroundColor: "#F1E4C4" }}>
                 <p className="text-sm font-bold" style={{ color: "#5A4326" }}>Position du livreur pas encore disponible</p>
               </div>
             )}
 
-            <div className="mb-5 flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "#2F6B4F" }}>
+            <div className="mb-2 flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "#2F6B4F" }}>
               {livree ? <CheckCircle2 key="done" className="anim-pop" size={24} color="#FBF3E3" /> : <Truck size={24} color="#FBF3E3" />}
-              <p className="text-sm font-black text-white">{statut}</p>
+              <div>
+                <p className="text-sm font-black text-white">{statut}</p>
+                {!livree && minutesRestantes != null && (
+                  <p className="text-xs font-bold text-white opacity-90">Environ {minutesRestantes} min · {kmRestants} km</p>
+                )}
+              </div>
             </div>
+            {!livree && aPosition && !aDestinationGPS && (
+              <p className="mb-3 text-xs font-bold" style={{ color: "#8B5E34" }}>
+                Temps estimé indisponible : votre adresse de livraison n'a pas de position GPS enregistrée.
+              </p>
+            )}
+            {erreurItineraire && (
+              <p className="mb-3 text-xs font-bold" style={{ color: "#C1443B" }}>{erreurItineraire}</p>
+            )}
           </>
         ) : (
           <div className="mb-5 rounded-2xl px-4 py-4 text-center" style={{ backgroundColor: "#F1E4C4" }}>
@@ -964,12 +1049,14 @@ export default function ClientApp() {
   };
 
   // Envoie réellement la commande à l'API (stock déduit en base, numéro réel renvoyé).
-  const confirmerCommande = async ({ items, adresse_label, adresse_detail, zone, moyen_paiement }) => {
+  const confirmerCommande = async ({ items, adresse_label, adresse_detail, adresse_lat, adresse_lng, zone, moyen_paiement }) => {
     const resultat = await api.creerCommande({
       telephone: profil.telephone,
       items,
       adresse_label,
       adresse_detail,
+      adresse_lat,
+      adresse_lng,
       zone,
       moyen_paiement,
     });
