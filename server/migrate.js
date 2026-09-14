@@ -64,6 +64,11 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS livreur_nom TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS livreur_lat DOUBLE PRECISION;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS livreur_lng DOUBLE PRECISION;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS position_maj_a TIMESTAMPTZ;
+
+-- Position GPS réelle du lieu de livraison (saisie côté client),
+-- nécessaire pour calculer une distance/temps estimé réels.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS client_lat DOUBLE PRECISION;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS client_lng DOUBLE PRECISION;
 `;
 
 async function migrate() {
