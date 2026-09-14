@@ -92,6 +92,26 @@ const TYPES_ACTIVITE = [
 
 const COMMANDE_MINIMUM_QTE = 5; // articles
 
+// ---- Sauvegarde locale (survit aux rechargements de page) ----
+const STOCKAGE_CLE = "mcm_client_v1";
+
+function chargerEtatSauvegarde() {
+  try {
+    const brut = localStorage.getItem(STOCKAGE_CLE);
+    return brut ? JSON.parse(brut) : null;
+  } catch {
+    return null;
+  }
+}
+
+function sauvegarderEtat(etat) {
+  try {
+    localStorage.setItem(STOCKAGE_CLE, JSON.stringify(etat));
+  } catch {
+    // stockage indisponible : on continue sans bloquer l'app
+  }
+}
+
 // ---- Composants génériques ----
 
 function Stamp() {
@@ -524,6 +544,13 @@ function CompteSheet({ open, onClose, profil, setProfil }) {
             <ChevronRight className="ml-auto" size={16} style={{ color: "#B8AC94" }} />
           </button>
         </div>
+        <a
+          href="/"
+          className="mt-4 flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-3 text-sm font-black"
+          style={{ borderColor: "#B8AC94", color: "#5A4326", textDecoration: "none" }}
+        >
+          <Home size={16} /> Retour à l'accueil
+        </a>
       </div>
     </Sheet>
   );
@@ -865,25 +892,35 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommand
 
 // ---- App shell : 2 écrans + fenêtres superposées ----
 export default function ClientApp() {
+  const sauvegarde = chargerEtatSauvegarde();
+
   const [ecran, setEcran] = useState("commander");
-  const [profil, setProfil] = useState({ telephone: "", commerce: "", type: "" });
-  const [adresses, setAdresses] = useState([]);
+  const [profil, setProfil] = useState(sauvegarde?.profil || { telephone: "", commerce: "", type: "" });
+  const [adresses, setAdresses] = useState(sauvegarde?.adresses || []);
   const [panier, setPanier] = useState({});
-  const [livraison, setLivraison] = useState(null);
-  const [dernierPaiement, setDernierPaiement] = useState(null);
+  const [livraison, setLivraison] = useState(sauvegarde?.livraison || null);
+  const [dernierPaiement, setDernierPaiement] = useState(sauvegarde?.dernierPaiement || null);
   const [reclamations, setReclamations] = useState(RECLAMATIONS_INIT);
-  const [derniereCommande, setDerniereCommande] = useState(null);
+  const [derniereCommande, setDerniereCommande] = useState(sauvegarde?.derniereCommande || null);
 
   const [produits, setProduits] = useState([]);
   const [produitsChargement, setProduitsChargement] = useState(true);
   const [produitsErreur, setProduitsErreur] = useState(null);
 
-  const [onboardingOuvert, setOnboardingOuvert] = useState(true);
+  // Si le profil est déjà connu (sauvegardé lors d'une visite précédente),
+  // on ne redemande pas l'inscription à chaque fois.
+  const [onboardingOuvert, setOnboardingOuvert] = useState(!sauvegarde?.profil?.telephone);
   const [finaliserOuvert, setFinaliserOuvert] = useState(false);
   const [compteOuvert, setCompteOuvert] = useState(false);
   const [reclamationOuverte, setReclamationOuverte] = useState(false);
   const [supportOuvert, setSupportOuvert] = useState(false);
-  const [commandeEnCours, setCommandeEnCours] = useState(false);
+  const [commandeEnCours, setCommandeEnCours] = useState(sauvegarde?.commandeEnCours || false);
+
+  // Sauvegarde automatique sur l'appareil à chaque changement important,
+  // pour ne pas tout perdre si la page se recharge ou si le téléphone se verrouille.
+  useEffect(() => {
+    sauvegarderEtat({ profil, adresses, livraison, dernierPaiement, derniereCommande, commandeEnCours });
+  }, [profil, adresses, livraison, dernierPaiement, derniereCommande, commandeEnCours]);
 
   // Chargement du vrai catalogue depuis l'API au démarrage.
   useEffect(() => {
