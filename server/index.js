@@ -111,7 +111,8 @@ app.post("/api/customers", async (req, res) => {
 // ---- Commandes ----
 app.get("/api/orders", async (req, res) => {
   try {
-    const { numero } = req.query;
+    const { numero, disponibles } = req.query;
+
     if (numero) {
       const { rows } = await pool.query(
         `SELECT o.*, c.commerce AS client_nom, c.telephone AS client_telephone
@@ -121,6 +122,20 @@ app.get("/api/orders", async (req, res) => {
       );
       return res.json(rows[0] || null);
     }
+
+    if (disponibles) {
+      // Commandes pas encore prises en charge par un livreur : celles que
+      // l'app livreur doit proposer (façon "notification" de nouvelle course).
+      const { rows } = await pool.query(`
+        SELECT o.*, c.commerce AS client_nom, c.telephone AS client_telephone
+        FROM orders o
+        LEFT JOIN customers c ON c.id = o.customer_id
+        WHERE o.livreur_nom IS NULL AND o.statut NOT IN ('Livrée', 'Annulée')
+        ORDER BY o.created_at ASC
+      `);
+      return res.json(rows);
+    }
+
     const { rows } = await pool.query(`
       SELECT o.*, c.commerce AS client_nom, c.telephone AS client_telephone
       FROM orders o
@@ -149,6 +164,29 @@ app.get("/api/orders/:id", async (req, res) => {
   }
 });
 
+// Le livreur accepte/valide une course — c'est ce qui « démarre » officiellement
+// la livraison (avant ça, personne n'est encore affecté à la commande).
+app.patch("/api/orders/:id/accepter", async (req, res) => {
+  const { livreur_nom } = req.body;
+  if (!livreur_nom) return res.status(400).json({ erreur: "livreur_nom requis" });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE orders
+       SET livreur_nom = $1,
+           statut = CASE WHEN statut IN ('Livrée', 'Annulée') THEN statut ELSE 'Livreur affecté' END
+       WHERE id = $2 AND livreur_nom IS NULL
+       RETURNING *`,
+      [livreur_nom, req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(409).json({ erreur: "Cette commande a déjà été prise en charge par un autre livreur, ou n'existe pas." });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ erreur: err.message });
+  }
+});
+
 // Mise à jour de la position GPS réelle du livreur (appelée en continu depuis l'app livreur)
 app.patch("/api/orders/:id/position", async (req, res) => {
   const { lat, lng, livreur_nom } = req.body;
@@ -171,9 +209,10 @@ app.patch("/api/orders/:id/position", async (req, res) => {
   }
 });
 
-// Créer une commande : { telephone, items:[{product_id, quantite}], adresse_label, adresse_detail, zone, moyen_paiement }
+// Créer une commande : { telephone, items:[{product_id, quantite}], adresse_label, adresse_detail,
+//                        adresse_lat, adresse_lng (position GPS réelle de livraison), zone, moyen_paiement }
 app.post("/api/orders", async (req, res) => {
-  const { telephone, items, adresse_label, adresse_detail, zone, moyen_paiement } = req.body;
+  const { telephone, items, adresse_label, adresse_detail, adresse_lat, adresse_lng, zone, moyen_paiement } = req.body;
   if (!telephone || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ erreur: "telephone et items (non vide) sont requis" });
   }
@@ -211,10 +250,10 @@ app.post("/api/orders", async (req, res) => {
 
     // Numéro de commande séquentiel simple basé sur l'id (généré après insertion)
     const orderResult = await client.query(
-      `INSERT INTO orders (numero, customer_id, zone, adresse_label, adresse_detail, sous_total, frais_livraison, total, moyen_paiement, statut, statut_paiement)
-       VALUES ('TEMP', $1,$2,$3,$4,$5,$6,$7,$8,'En attente','En attente')
+      `INSERT INTO orders (numero, customer_id, zone, adresse_label, adresse_detail, client_lat, client_lng, sous_total, frais_livraison, total, moyen_paiement, statut, statut_paiement)
+       VALUES ('TEMP', $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'En attente','En attente')
        RETURNING id`,
-      [customerId, zone || null, adresse_label || null, adresse_detail || null, sousTotal, fraisLivraison, total, moyen_paiement || null]
+      [customerId, zone || null, adresse_label || null, adresse_detail || null, adresse_lat ?? null, adresse_lng ?? null, sousTotal, fraisLivraison, total, moyen_paiement || null]
     );
     const orderId = orderResult.rows[0].id;
     const numero = `CMD-${1000 + orderId}`;
