@@ -8,6 +8,10 @@ const GREEN = "#2F6B4F";
 const OCHRE = "#8B5E34";
 const RED = "#C1443B";
 
+function fmt(n) {
+  return n.toLocaleString("fr-FR") + " F";
+}
+
 function BigButton({ children, onClick, disabled, tone = "primary" }) {
   const tones = {
     primary: { backgroundColor: GREEN, color: CREAM },
@@ -27,31 +31,94 @@ function BigButton({ children, onClick, disabled, tone = "primary" }) {
 }
 
 export default function LivreurApp() {
-  const [numero, setNumero] = useState("");
   const [nomLivreur, setNomLivreur] = useState("");
-  const [commande, setCommande] = useState(null);
-  const [recherche, setRecherche] = useState(false);
-  const [erreur, setErreur] = useState(null);
+  const [nomValide, setNomValide] = useState(false);
+
+  const [disponibles, setDisponibles] = useState([]);
+  const [erreurListe, setErreurListe] = useState(null);
+  const idsConnusRef = useRef(new Set());
+  const [permissionNotif, setPermissionNotif] = useState(
+    typeof Notification !== "undefined" ? Notification.permission : "unsupported"
+  );
+
+  const [commandeSelectionnee, setCommandeSelectionnee] = useState(null); // détail (avec items) en cours de consultation
+  const [chargementDetail, setChargementDetail] = useState(false);
+  const [erreurDetail, setErreurDetail] = useState(null);
+  const [acceptationEnCours, setAcceptationEnCours] = useState(false);
+
+  const [commandeAcceptee, setCommandeAcceptee] = useState(null); // commande prise en charge, prête pour le partage GPS
   const [partageActif, setPartageActif] = useState(false);
   const [dernierePosition, setDernierePosition] = useState(null);
   const [erreurGPS, setErreurGPS] = useState(null);
   const watchId = useRef(null);
 
-  const chercherCommande = async () => {
-    setErreur(null);
-    setRecherche(true);
-    try {
-      const c = await api.commandeParNumero(numero.trim());
-      if (!c) {
-        setErreur("Aucune commande trouvée avec ce numéro.");
-        setCommande(null);
-      } else {
-        setCommande(c);
+  // Demande la permission de notification une fois le nom saisi.
+  useEffect(() => {
+    if (nomValide && typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().then(setPermissionNotif);
+    }
+  }, [nomValide]);
+
+  // Rafraîchit la liste des commandes disponibles (pas encore prises), façon notifications.
+  useEffect(() => {
+    if (!nomValide || commandeAcceptee) return;
+    let annule = false;
+    let premierChargement = true;
+    const rafraichir = async () => {
+      try {
+        const rows = await api.commandesDisponibles();
+        if (annule) return;
+        const nouvelles = rows.filter((c) => !idsConnusRef.current.has(c.id));
+        rows.forEach((c) => idsConnusRef.current.add(c.id));
+        setDisponibles(rows);
+        setErreurListe(null);
+        if (!premierChargement && nouvelles.length > 0) {
+          if (permissionNotif === "granted") {
+            try {
+              new Notification("Nouvelle commande à livrer", {
+                body: `${nouvelles[0].numero} — ${nouvelles[0].zone || nouvelles[0].adresse_label || ""}`,
+              });
+            } catch {
+              // notification indisponible sur cet appareil : pas bloquant
+            }
+          }
+          if (navigator.vibrate) navigator.vibrate(200);
+        }
+        premierChargement = false;
+      } catch (e) {
+        if (!annule) setErreurListe(e.message);
       }
+    };
+    rafraichir();
+    const t = setInterval(rafraichir, 8000);
+    return () => { annule = true; clearInterval(t); };
+  }, [nomValide, commandeAcceptee, permissionNotif]);
+
+  const ouvrirDetail = async (commandeResume) => {
+    setErreurDetail(null);
+    setChargementDetail(true);
+    setCommandeSelectionnee(commandeResume);
+    try {
+      const complet = await api.commande(commandeResume.id);
+      setCommandeSelectionnee(complet);
     } catch (e) {
-      setErreur(e.message);
+      setErreurDetail(e.message);
     } finally {
-      setRecherche(false);
+      setChargementDetail(false);
+    }
+  };
+
+  const accepter = async () => {
+    setAcceptationEnCours(true);
+    setErreurDetail(null);
+    try {
+      const misAJour = await api.accepterCommande(commandeSelectionnee.id, nomLivreur);
+      setCommandeAcceptee({ ...commandeSelectionnee, ...misAJour });
+      setCommandeSelectionnee(null);
+    } catch (e) {
+      setErreurDetail(e.message);
+    } finally {
+      setAcceptationEnCours(false);
     }
   };
 
@@ -66,7 +133,7 @@ export default function LivreurApp() {
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setDernierePosition({ lat: latitude, lng: longitude, heure: new Date() });
-        api.majPosition(commande.id, { lat: latitude, lng: longitude, livreur_nom: nomLivreur || null }).catch(() => {});
+        api.majPosition(commandeAcceptee.id, { lat: latitude, lng: longitude, livreur_nom: nomLivreur || null }).catch(() => {});
       },
       (err) => {
         setErreurGPS("Impossible d'accéder à la position : " + err.message);
@@ -88,11 +155,12 @@ export default function LivreurApp() {
 
   const marquerLivree = async () => {
     try {
-      await api.majCommande(commande.id, { statut: "Livrée" });
+      await api.majCommande(commandeAcceptee.id, { statut: "Livrée" });
       arreterPartage();
-      setCommande((c) => ({ ...c, statut: "Livrée" }));
+      setCommandeAcceptee(null);
+      setDernierePosition(null);
     } catch (e) {
-      setErreur(e.message);
+      setErreurGPS(e.message);
     }
   };
 
@@ -102,38 +170,107 @@ export default function LivreurApp() {
         <p className="mb-1 text-xs font-black uppercase tracking-wider" style={{ color: OCHRE }}>MON MARCHE FERMIER</p>
         <h1 className="mb-5 text-2xl font-black" style={{ color: INK }}>App livreur</h1>
 
-        {!commande ? (
+        {/* Étape 1 : identification simple du livreur */}
+        {!nomValide && (
           <>
             <label className="mb-1 block text-xs font-black uppercase" style={{ color: OCHRE }}>Votre nom</label>
             <input
               value={nomLivreur}
               onChange={(e) => setNomLivreur(e.target.value)}
               placeholder="Ex : Ibrahim Koné"
-              className="mb-3 w-full rounded-2xl border-2 bg-white px-4 py-3 font-bold outline-none"
-              style={{ borderColor: "#EEE3CE", color: INK }}
-            />
-            <label className="mb-1 block text-xs font-black uppercase" style={{ color: OCHRE }}>Numéro de commande</label>
-            <input
-              value={numero}
-              onChange={(e) => setNumero(e.target.value)}
-              placeholder="Ex : CMD-1042"
               className="mb-4 w-full rounded-2xl border-2 bg-white px-4 py-3 font-bold outline-none"
               style={{ borderColor: "#EEE3CE", color: INK }}
             />
-            {erreur && <p className="mb-3 text-sm font-bold" style={{ color: RED }}>{erreur}</p>}
-            <BigButton disabled={!numero.trim() || recherche} onClick={chercherCommande}>
-              {recherche ? "Recherche..." : "Trouver la commande"}
+            <BigButton disabled={!nomLivreur.trim()} onClick={() => setNomValide(true)}>Commencer ma tournée</BigButton>
+          </>
+        )}
+
+        {/* Étape 2 : liste des commandes disponibles (façon notifications) */}
+        {nomValide && !commandeAcceptee && !commandeSelectionnee && (
+          <>
+            <p className="mb-3 text-sm font-bold" style={{ color: OCHRE }}>Bonjour {nomLivreur}</p>
+            <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: OCHRE }}>
+              Commandes disponibles {disponibles.length > 0 && `(${disponibles.length})`}
+            </p>
+            {erreurListe && <p className="mb-3 text-sm font-bold" style={{ color: RED }}>{erreurListe}</p>}
+            {disponibles.length === 0 && !erreurListe && (
+              <p className="rounded-2xl px-4 py-6 text-center text-sm font-bold" style={{ backgroundColor: SAND, color: "#5A4326" }}>
+                Aucune commande à livrer pour le moment. Cette liste se met à jour automatiquement.
+              </p>
+            )}
+            <div className="flex flex-col gap-2">
+              {disponibles.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => ouvrirDetail(c)}
+                  className="flex items-center justify-between rounded-2xl border-2 bg-white px-4 py-3 text-left"
+                  style={{ borderColor: "#EEE3CE" }}
+                >
+                  <div>
+                    <p className="font-black" style={{ color: INK }}>{c.numero}</p>
+                    <p className="text-xs font-semibold" style={{ color: "#B8AC94" }}>{c.client_nom || c.client_telephone} · {c.zone || c.adresse_label}</p>
+                  </div>
+                  <p className="font-black" style={{ color: GREEN }}>{fmt(c.total)}</p>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Étape 3 : détail d'une commande + acceptation */}
+        {commandeSelectionnee && !commandeAcceptee && (
+          <>
+            <button onClick={() => setCommandeSelectionnee(null)} className="mb-3 text-xs font-black" style={{ color: OCHRE }}>
+              ← Retour à la liste
+            </button>
+            <div className="mb-4 rounded-2xl px-4 py-4" style={{ backgroundColor: SAND }}>
+              <p className="mb-2 font-black" style={{ color: INK }}>{commandeSelectionnee.numero}</p>
+
+              <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Client</p>
+              <p className="mb-2 font-bold" style={{ color: INK }}>{commandeSelectionnee.client_nom || "—"}</p>
+
+              <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Téléphone</p>
+              <p className="mb-2 font-bold" style={{ color: INK }}>{commandeSelectionnee.client_telephone || "—"}</p>
+
+              <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Destination</p>
+              <p className="mb-2 font-bold" style={{ color: INK }}>
+                {commandeSelectionnee.adresse_label} — {commandeSelectionnee.adresse_detail}
+              </p>
+
+              {chargementDetail && <p className="text-xs font-bold" style={{ color: OCHRE }}>Chargement du détail...</p>}
+              {commandeSelectionnee.items && commandeSelectionnee.items.length > 0 && (
+                <>
+                  <p className="mb-1 mt-2 text-[11px] font-black uppercase" style={{ color: OCHRE }}>Articles</p>
+                  <ul className="mb-2">
+                    {commandeSelectionnee.items.map((it) => (
+                      <li key={it.id} className="text-sm font-semibold" style={{ color: INK }}>
+                        {it.quantite} × {it.nom}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <p className="mt-2 text-right text-lg font-black" style={{ color: GREEN }}>{fmt(commandeSelectionnee.total)}</p>
+            </div>
+
+            {erreurDetail && <p className="mb-3 text-sm font-bold" style={{ color: RED }}>{erreurDetail}</p>}
+
+            <BigButton disabled={acceptationEnCours} onClick={accepter}>
+              {acceptationEnCours ? "Validation..." : "Accepter cette livraison"}
             </BigButton>
           </>
-        ) : (
+        )}
+
+        {/* Étape 4 : commande acceptée, partage GPS */}
+        {commandeAcceptee && (
           <>
             <div className="mb-4 rounded-2xl px-4 py-3" style={{ backgroundColor: SAND }}>
-              <p className="font-black" style={{ color: INK }}>{commande.numero}</p>
-              <p className="text-sm font-bold" style={{ color: OCHRE }}>{commande.client_nom || commande.client_telephone}</p>
+              <p className="font-black" style={{ color: INK }}>{commandeAcceptee.numero}</p>
+              <p className="text-sm font-bold" style={{ color: OCHRE }}>{commandeAcceptee.client_nom || commandeAcceptee.client_telephone}</p>
               <p className="text-sm font-semibold" style={{ color: "#5A4326" }}>
-                {commande.adresse_label} — {commande.adresse_detail}
+                {commandeAcceptee.adresse_label} — {commandeAcceptee.adresse_detail}
               </p>
-              <p className="mt-1 text-xs font-black uppercase" style={{ color: GREEN }}>{commande.statut}</p>
+              <p className="mt-1 text-xs font-black uppercase" style={{ color: GREEN }}>{commandeAcceptee.statut}</p>
             </div>
 
             {erreurGPS && <p className="mb-3 text-sm font-bold" style={{ color: RED }}>{erreurGPS}</p>}
@@ -159,10 +296,6 @@ export default function LivreurApp() {
             <div className="mt-3">
               <BigButton tone="ghost" onClick={marquerLivree}>Marquer comme livrée</BigButton>
             </div>
-
-            <button onClick={() => { arreterPartage(); setCommande(null); setNumero(""); }} className="mt-4 w-full text-center text-xs font-bold" style={{ color: OCHRE }}>
-              Changer de commande
-            </button>
           </>
         )}
       </div>
