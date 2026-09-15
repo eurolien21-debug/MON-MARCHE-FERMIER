@@ -30,8 +30,22 @@ function BigButton({ children, onClick, disabled, tone = "primary" }) {
   );
 }
 
+function BoutonAppel({ telephone }) {
+  if (!telephone) return null;
+  return (
+    <a
+      href={`tel:${telephone}`}
+      className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black"
+      style={{ backgroundColor: "#E4EEE8", color: GREEN, textDecoration: "none" }}
+    >
+      📞 Appeler le client ({telephone})
+    </a>
+  );
+}
+
 export default function LivreurApp() {
   const [nomLivreur, setNomLivreur] = useState("");
+  const [telLivreur, setTelLivreur] = useState("");
   const [nomValide, setNomValide] = useState(false);
 
   const [disponibles, setDisponibles] = useState([]);
@@ -50,6 +64,8 @@ export default function LivreurApp() {
   const [partageActif, setPartageActif] = useState(false);
   const [dernierePosition, setDernierePosition] = useState(null);
   const [erreurGPS, setErreurGPS] = useState(null);
+  const [rapport, setRapport] = useState(null); // petit rapport affiché après une livraison terminée
+  const heureAcceptationRef = useRef(null);
   const watchId = useRef(null);
 
   // Demande la permission de notification une fois le nom saisi.
@@ -112,7 +128,8 @@ export default function LivreurApp() {
     setAcceptationEnCours(true);
     setErreurDetail(null);
     try {
-      const misAJour = await api.accepterCommande(commandeSelectionnee.id, nomLivreur);
+      const misAJour = await api.accepterCommande(commandeSelectionnee.id, nomLivreur, telLivreur || null);
+      heureAcceptationRef.current = Date.now();
       setCommandeAcceptee({ ...commandeSelectionnee, ...misAJour });
       setCommandeSelectionnee(null);
     } catch (e) {
@@ -156,6 +173,15 @@ export default function LivreurApp() {
   const marquerLivree = async () => {
     try {
       await api.majCommande(commandeAcceptee.id, { statut: "Livrée" });
+      const dureeMs = heureAcceptationRef.current ? Date.now() - heureAcceptationRef.current : null;
+      setRapport({
+        numero: commandeAcceptee.numero,
+        client: commandeAcceptee.client_nom || commandeAcceptee.client_telephone,
+        adresse: `${commandeAcceptee.adresse_label || ""} — ${commandeAcceptee.adresse_detail || ""}`,
+        montant: commandeAcceptee.total,
+        dureeMinutes: dureeMs ? Math.max(1, Math.round(dureeMs / 60000)) : null,
+        heure: new Date().toLocaleTimeString("fr-FR"),
+      });
       arreterPartage();
       setCommandeAcceptee(null);
       setDernierePosition(null);
@@ -164,6 +190,12 @@ export default function LivreurApp() {
     }
   };
 
+  const LienAccueil = () => (
+    <a href="/" className="mt-4 block text-center text-xs font-bold" style={{ color: OCHRE }}>
+      🏠 Retour à l'accueil
+    </a>
+  );
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-6" style={{ backgroundColor: SAND, fontFamily: "Inter, system-ui, sans-serif" }}>
       <div className="w-full max-w-sm rounded-[2rem] p-6" style={{ backgroundColor: CREAM }}>
@@ -171,22 +203,32 @@ export default function LivreurApp() {
         <h1 className="mb-5 text-2xl font-black" style={{ color: INK }}>App livreur</h1>
 
         {/* Étape 1 : identification simple du livreur */}
-        {!nomValide && (
+        {!nomValide && !rapport && (
           <>
             <label className="mb-1 block text-xs font-black uppercase" style={{ color: OCHRE }}>Votre nom</label>
             <input
               value={nomLivreur}
               onChange={(e) => setNomLivreur(e.target.value)}
               placeholder="Ex : Ibrahim Koné"
+              className="mb-3 w-full rounded-2xl border-2 bg-white px-4 py-3 font-bold outline-none"
+              style={{ borderColor: "#EEE3CE", color: INK }}
+            />
+            <label className="mb-1 block text-xs font-black uppercase" style={{ color: OCHRE }}>Votre téléphone</label>
+            <input
+              value={telLivreur}
+              onChange={(e) => setTelLivreur(e.target.value)}
+              placeholder="Ex : 07 00 00 00 00"
+              type="tel"
               className="mb-4 w-full rounded-2xl border-2 bg-white px-4 py-3 font-bold outline-none"
               style={{ borderColor: "#EEE3CE", color: INK }}
             />
-            <BigButton disabled={!nomLivreur.trim()} onClick={() => setNomValide(true)}>Commencer ma tournée</BigButton>
+            <BigButton disabled={!nomLivreur.trim() || !telLivreur.trim()} onClick={() => setNomValide(true)}>Commencer ma tournée</BigButton>
+            <LienAccueil />
           </>
         )}
 
         {/* Étape 2 : liste des commandes disponibles (façon notifications) */}
-        {nomValide && !commandeAcceptee && !commandeSelectionnee && (
+        {nomValide && !commandeAcceptee && !commandeSelectionnee && !rapport && (
           <>
             <p className="mb-3 text-sm font-bold" style={{ color: OCHRE }}>Bonjour {nomLivreur}</p>
             <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: OCHRE }}>
@@ -214,6 +256,7 @@ export default function LivreurApp() {
                 </button>
               ))}
             </div>
+            <LienAccueil />
           </>
         )}
 
@@ -253,6 +296,8 @@ export default function LivreurApp() {
               <p className="mt-2 text-right text-lg font-black" style={{ color: GREEN }}>{fmt(commandeSelectionnee.total)}</p>
             </div>
 
+            <BoutonAppel telephone={commandeSelectionnee.client_telephone} />
+
             {erreurDetail && <p className="mb-3 text-sm font-bold" style={{ color: RED }}>{erreurDetail}</p>}
 
             <BigButton disabled={acceptationEnCours} onClick={accepter}>
@@ -272,6 +317,8 @@ export default function LivreurApp() {
               </p>
               <p className="mt-1 text-xs font-black uppercase" style={{ color: GREEN }}>{commandeAcceptee.statut}</p>
             </div>
+
+            <BoutonAppel telephone={commandeAcceptee.client_telephone} />
 
             {erreurGPS && <p className="mb-3 text-sm font-bold" style={{ color: RED }}>{erreurGPS}</p>}
 
@@ -296,6 +343,34 @@ export default function LivreurApp() {
             <div className="mt-3">
               <BigButton tone="ghost" onClick={marquerLivree}>Marquer comme livrée</BigButton>
             </div>
+          </>
+        )}
+
+        {/* Étape 5 : petit rapport de livraison, une fois terminée */}
+        {rapport && (
+          <>
+            <div className="mb-4 flex flex-col items-center gap-2 rounded-2xl px-4 py-5 text-center" style={{ backgroundColor: "#E4EEE8" }}>
+              <p className="text-2xl">✅</p>
+              <p className="text-lg font-black" style={{ color: GREEN }}>Livraison terminée</p>
+            </div>
+            <div className="mb-4 rounded-2xl px-4 py-4" style={{ backgroundColor: SAND }}>
+              <p className="mb-2 font-black" style={{ color: INK }}>{rapport.numero}</p>
+              <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Client</p>
+              <p className="mb-2 font-bold" style={{ color: INK }}>{rapport.client}</p>
+              <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Destination</p>
+              <p className="mb-2 font-bold" style={{ color: INK }}>{rapport.adresse}</p>
+              <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Livrée à</p>
+              <p className="mb-2 font-bold" style={{ color: INK }}>{rapport.heure}</p>
+              {rapport.dureeMinutes != null && (
+                <>
+                  <p className="text-[11px] font-black uppercase" style={{ color: OCHRE }}>Durée de la course</p>
+                  <p className="mb-2 font-bold" style={{ color: INK }}>{rapport.dureeMinutes} min</p>
+                </>
+              )}
+              <p className="mt-2 text-right text-lg font-black" style={{ color: GREEN }}>{fmt(rapport.montant)}</p>
+            </div>
+            <BigButton onClick={() => setRapport(null)}>Voir les prochaines livraisons</BigButton>
+            <LienAccueil />
           </>
         )}
       </div>
