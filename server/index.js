@@ -167,16 +167,16 @@ app.get("/api/orders/:id", async (req, res) => {
 // Le livreur accepte/valide une course — c'est ce qui « démarre » officiellement
 // la livraison (avant ça, personne n'est encore affecté à la commande).
 app.patch("/api/orders/:id/accepter", async (req, res) => {
-  const { livreur_nom } = req.body;
+  const { livreur_nom, livreur_telephone } = req.body;
   if (!livreur_nom) return res.status(400).json({ erreur: "livreur_nom requis" });
   try {
     const { rows } = await pool.query(
       `UPDATE orders
-       SET livreur_nom = $1,
+       SET livreur_nom = $1, livreur_telephone = $2,
            statut = CASE WHEN statut IN ('Livrée', 'Annulée') THEN statut ELSE 'Livreur affecté' END
-       WHERE id = $2 AND livreur_nom IS NULL
+       WHERE id = $3 AND livreur_nom IS NULL
        RETURNING *`,
-      [livreur_nom, req.params.id]
+      [livreur_nom, livreur_telephone || null, req.params.id]
     );
     if (rows.length === 0) {
       return res.status(409).json({ erreur: "Cette commande a déjà été prise en charge par un autre livreur, ou n'existe pas." });
