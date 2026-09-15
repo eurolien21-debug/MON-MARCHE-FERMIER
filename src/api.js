@@ -27,7 +27,7 @@ export const api = {
   commande: (id) => requete(`/api/orders/${id}`),
   commandeParNumero: (numero) => requete(`/api/orders?numero=${encodeURIComponent(numero)}`),
   commandesDisponibles: () => requete("/api/orders?disponibles=1"),
-  accepterCommande: (id, livreur_nom) => requete(`/api/orders/${id}/accepter`, { method: "PATCH", body: JSON.stringify({ livreur_nom }) }),
+  accepterCommande: (id, livreur_nom, livreur_telephone) => requete(`/api/orders/${id}/accepter`, { method: "PATCH", body: JSON.stringify({ livreur_nom, livreur_telephone }) }),
   majPosition: (id, position) => requete(`/api/orders/${id}/position`, { method: "PATCH", body: JSON.stringify(position) }),
   creerCommande: (commande) => requete("/api/orders", { method: "POST", body: JSON.stringify(commande) }),
   majCommande: (id, champs) => requete(`/api/orders/${id}`, { method: "PATCH", body: JSON.stringify(champs) }),
