@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -49,6 +49,7 @@ import {
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { api } from "../api.js";
 
 // Icônes Leaflet par défaut (le bundler casse les chemins d'images par défaut)
 const iconLivreur = new L.DivIcon({
@@ -85,39 +86,14 @@ const VENTES_7J = [
   { jour: "Dim", ca: 1640000 },
 ];
 
-const COMMANDES = [
-  { id: "CMD-1042", client: "Maquis Chez Awa", zone: "Cocody", montant: 68000, statut: "En préparation", paiement: "Orange Money" },
-  { id: "CMD-1041", client: "Resto Le Bon Goût", zone: "Marcory", montant: 142500, statut: "Livrée", paiement: "Wave" },
-  { id: "CMD-1040", client: "Superette Diallo", zone: "Yopougon", montant: 305000, statut: "En attente", paiement: "Crédit pro" },
-  { id: "CMD-1039", client: "Panini Express", zone: "Angré", montant: 41000, statut: "Livreur en route", paiement: "MTN MoMo" },
-  { id: "CMD-1038", client: "Hôtel Ivoire Plage", zone: "Treichville", montant: 512000, statut: "Annulée", paiement: "Carte bancaire" },
-  { id: "CMD-1037", client: "Choukouya Fatou", zone: "Abobo", montant: 27500, statut: "Livrée", paiement: "Orange Money" },
-];
-
 const STATUT_STYLE = {
   "En attente": { bg: "#F1E4C4", color: OCHRE, icon: Clock },
   "En préparation": { bg: "#FBEBD1", color: GOLD, icon: Clock },
+  "Livreur affecté": { bg: "#FBEBD1", color: GOLD, icon: Truck },
   "Livreur en route": { bg: "#E4EEE8", color: GREEN, icon: Truck },
   "Livrée": { bg: "#E4EEE8", color: GREEN, icon: CheckCircle2 },
   "Annulée": { bg: "#F7E4E2", color: RED, icon: XCircle },
 };
-
-const STOCK = [
-  { produit: "Poulet de chair", emoji: "🐔", unite: "unité", niveau: 68, seuil: 30, alerte: false },
-  { produit: "Œufs", emoji: "🥚", unite: "plateau", niveau: 12, seuil: 20, alerte: true },
-  { produit: "Cuisses", emoji: "🍗", unite: "kg", niveau: 45, seuil: 25, alerte: false },
-  { produit: "Pilons", emoji: "🍗", unite: "kg", niveau: 8, seuil: 20, alerte: true },
-  { produit: "Poisson", emoji: "🐟", unite: "kg", niveau: 30, seuil: 15, alerte: false },
-  { produit: "Brochettes", emoji: "🍢", unite: "unité", niveau: 90, seuil: 40, alerte: false },
-];
-
-const CLIENTS = [
-  { nom: "Maquis Chez Awa", segment: "Gold", commandes: 84, panierMoyen: 62000, credit: "180 000 / 500 000" },
-  { nom: "Resto Le Bon Goût", segment: "VIP", commandes: 210, panierMoyen: 140000, credit: "—" },
-  { nom: "Superette Diallo", segment: "Silver", commandes: 33, panierMoyen: 95000, credit: "305 000 / 400 000" },
-  { nom: "Panini Express", segment: "Bronze", commandes: 12, panierMoyen: 39000, credit: "—" },
-  { nom: "Choukouya Fatou", segment: "Silver", commandes: 46, panierMoyen: 27000, credit: "—" },
-];
 
 const SEGMENT_STYLE = {
   Bronze: "#B08D57",
@@ -313,6 +289,41 @@ function fmt(n) {
   return n.toLocaleString("fr-FR") + " F";
 }
 
+// Charge des données réelles depuis l'API et gère chargement/erreur.
+function useApiData(fetcher, deps = []) {
+  const [data, setData] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  const [chargement, setChargement] = useState(true);
+
+  useEffect(() => {
+    let annule = false;
+    setChargement(true);
+    setErreur(null);
+    fetcher()
+      .then((d) => { if (!annule) setData(d); })
+      .catch((e) => { if (!annule) setErreur(e.message); })
+      .finally(() => { if (!annule) setChargement(false); });
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return { data, erreur, chargement };
+}
+
+function EtatChargement({ erreur, chargement }) {
+  if (chargement) {
+    return <p className="py-10 text-center text-sm font-bold" style={{ color: MUTED }}>Chargement des données réelles...</p>;
+  }
+  if (erreur) {
+    return (
+      <div className="rounded-2xl border px-4 py-4 text-sm font-bold" style={{ borderColor: "#F0C2BC", backgroundColor: "#F7E4E2", color: RED }}>
+        Impossible de charger les données : {erreur}
+      </div>
+    );
+  }
+  return null;
+}
+
 function Sidebar({ page, setPage }) {
   const items = [
     { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -401,7 +412,7 @@ function KpiCard({ label, value, delta, positive = true, icon: Icon, accent }) {
 }
 
 function StatutBadge({ statut }) {
-  const s = STATUT_STYLE[statut];
+  const s = STATUT_STYLE[statut] || { bg: SAND, color: OCHRE, icon: Clock };
   const Icon = s.icon;
   return (
     <span
@@ -415,11 +426,19 @@ function StatutBadge({ statut }) {
 }
 
 function DashboardPage() {
+  const { data: produits } = useApiData(() => api.produits(), []);
+  const { data: commandes } = useApiData(() => api.commandes(), []);
+  const alertes = (produits || []).filter((s) => s.stock <= s.seuil_alerte);
+  const dernieres = (commandes || []).slice(0, 4);
+
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="mb-2 rounded-xl px-4 py-2 text-xs font-bold" style={{ backgroundColor: "#FBEBD1", color: OCHRE }}>
+        Les cartes KPI et le graphique de CA restent illustratifs pour l'instant — ils demandent un endpoint d'agrégation dédié, pas encore construit. Le stock, les commandes et leur historique, eux, sont déjà réels.
+      </div>
       <div className="mb-5 flex gap-4">
         <KpiCard label="Ventes du jour" value={fmt(1640000)} delta="12%" icon={TrendingUp} accent={GREEN} />
-        <KpiCard label="Commandes" value="47" delta="5%" icon={ShoppingBag} accent={GOLD} />
+        <KpiCard label="Commandes" value={commandes ? String(commandes.length) : "—"} icon={ShoppingBag} accent={GOLD} />
         <KpiCard label="Encaissé" value={fmt(1310000)} delta="9%" icon={Wallet} accent={GREEN} />
         <KpiCard label="En attente" value={fmt(330000)} delta="3%" positive={false} icon={Clock} accent={RED} />
         <KpiCard label="Marge estimée" value={fmt(410000)} delta="7%" icon={BarChart3} accent={OCHRE} />
@@ -450,18 +469,18 @@ function DashboardPage() {
             <AlertTriangle size={16} style={{ color: RED }} /> Alertes stock
           </p>
           <div className="flex flex-col gap-3">
-            {STOCK.filter((s) => s.alerte).map((s) => (
-              <div key={s.produit} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ backgroundColor: "#F7E4E2" }}>
+            {alertes.map((s) => (
+              <div key={s.id} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ backgroundColor: "#F7E4E2" }}>
                 <span className="text-xl">{s.emoji}</span>
                 <div>
-                  <p className="text-xs font-black" style={{ color: INK }}>{s.produit}</p>
+                  <p className="text-xs font-black" style={{ color: INK }}>{s.nom}</p>
                   <p className="text-[11px] font-bold" style={{ color: RED }}>
-                    {s.niveau} {s.unite} restants — seuil {s.seuil}
+                    {s.stock} {s.unite} restants — seuil {s.seuil_alerte}
                   </p>
                 </div>
               </div>
             ))}
-            {STOCK.filter((s) => s.alerte).length === 0 && (
+            {alertes.length === 0 && (
               <p className="text-xs font-bold" style={{ color: MUTED }}>Aucune alerte en cours</p>
             )}
           </div>
@@ -483,12 +502,15 @@ function DashboardPage() {
             </tr>
           </thead>
           <tbody>
-            {COMMANDES.slice(0, 4).map((c) => (
+            {dernieres.length === 0 && (
+              <tr><td colSpan={5} className="py-4 text-center font-bold" style={{ color: MUTED }}>Aucune commande pour le moment</td></tr>
+            )}
+            {dernieres.map((c) => (
               <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
-                <td className="py-2.5 font-black" style={{ color: INK }}>{c.id}</td>
-                <td className="py-2.5 font-semibold" style={{ color: INK }}>{c.client}</td>
-                <td className="py-2.5 font-semibold" style={{ color: MUTED }}>{c.zone}</td>
-                <td className="py-2.5 font-black" style={{ color: INK }}>{fmt(c.montant)}</td>
+                <td className="py-2.5 font-black" style={{ color: INK }}>{c.numero}</td>
+                <td className="py-2.5 font-semibold" style={{ color: INK }}>{c.client_nom || c.client_telephone}</td>
+                <td className="py-2.5 font-semibold" style={{ color: MUTED }}>{c.zone || "—"}</td>
+                <td className="py-2.5 font-black" style={{ color: INK }}>{fmt(c.total)}</td>
                 <td className="py-2.5"><StatutBadge statut={c.statut} /></td>
               </tr>
             ))}
@@ -499,10 +521,70 @@ function DashboardPage() {
   );
 }
 
+function HistoriqueCommandeModal({ commande, onClose }) {
+  const { data: evenements, erreur, chargement } = useApiData(() => api.evenementsCommande(commande.id), [commande.id]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      style={{ backgroundColor: "rgba(43,38,32,0.5)" }}
+      onClick={onClose}
+    >
+      <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-1 flex items-center justify-between">
+          <p className="text-lg font-black" style={{ color: INK }}>{commande.numero}</p>
+          <button onClick={onClose} className="text-xs font-black" style={{ color: MUTED }}>Fermer ✕</button>
+        </div>
+        <p className="mb-1 text-xs font-bold" style={{ color: OCHRE }}>{commande.client_nom || commande.client_telephone}</p>
+        {commande.livreur_nom && (
+          <p className="mb-4 text-xs font-bold" style={{ color: MUTED }}>Livreur : {commande.livreur_nom}{commande.livreur_telephone ? ` — ${commande.livreur_telephone}` : ""}</p>
+        )}
+
+        <EtatChargement erreur={erreur} chargement={chargement} />
+
+        {!chargement && !erreur && (
+          <div className="flex flex-col gap-3">
+            {(evenements || []).length === 0 && (
+              <p className="text-sm font-bold" style={{ color: MUTED }}>Aucun événement enregistré pour cette commande.</p>
+            )}
+            {(evenements || []).map((e, idx) => (
+              <div key={e.id} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: GREEN }} />
+                  {idx < evenements.length - 1 && <div className="w-px flex-1" style={{ backgroundColor: LINE }} />}
+                </div>
+                <div className="pb-3">
+                  <p className="text-sm font-black" style={{ color: INK }}>{e.evenement}</p>
+                  {e.details && <p className="text-xs font-semibold" style={{ color: MUTED }}>{e.details}</p>}
+                  <p className="text-[11px] font-bold" style={{ color: OCHRE }}>
+                    {new Date(e.cree_a).toLocaleString("fr-FR")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CommandesPage() {
   const [filtre, setFiltre] = useState("Toutes");
-  const statuts = ["Toutes", "En attente", "En préparation", "Livreur en route", "Livrée", "Annulée"];
-  const visibles = filtre === "Toutes" ? COMMANDES : COMMANDES.filter((c) => c.statut === filtre);
+  const [version, setVersion] = useState(0);
+  const [historiqueOuvert, setHistoriqueOuvert] = useState(null);
+  const { data: commandes, erreur, chargement } = useApiData(() => api.commandes(), [version]);
+  const statuts = ["Toutes", "En attente", "En préparation", "Livreur affecté", "Livreur en route", "Livrée", "Annulée"];
+  const visibles = !commandes ? [] : filtre === "Toutes" ? commandes : commandes.filter((c) => c.statut === filtre);
+
+  const changerStatut = async (id, statut) => {
+    try {
+      await api.majCommande(id, { statut });
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -523,43 +605,85 @@ function CommandesPage() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Commande</th>
-              <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Zone</th>
-              <th className="px-4 py-3">Paiement</th>
-              <th className="px-4 py-3">Montant</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibles.map((c) => (
-              <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.id}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{c.client}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>
-                  <span className="inline-flex items-center gap-1"><MapPin size={13} />{c.zone}</span>
-                </td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.paiement}</td>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(c.montant)}</td>
-                <td className="px-4 py-3"><StatutBadge statut={c.statut} /></td>
-                <td className="px-4 py-3 text-right">
-                  <MoreHorizontal size={18} style={{ color: MUTED }} />
-                </td>
+      <EtatChargement erreur={erreur} chargement={chargement} />
+
+      {!chargement && !erreur && (
+        <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                <th className="px-4 py-3">Commande</th>
+                <th className="px-4 py-3">Client</th>
+                <th className="px-4 py-3">Zone</th>
+                <th className="px-4 py-3">Livreur</th>
+                <th className="px-4 py-3">Paiement</th>
+                <th className="px-4 py-3">Montant</th>
+                <th className="px-4 py-3">Statut</th>
+                <th className="px-4 py-3">Changer</th>
+                <th className="px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {visibles.length === 0 && (
+                <tr><td colSpan={9} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucune commande pour le moment</td></tr>
+              )}
+              {visibles.map((c) => (
+                <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
+                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.numero}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{c.client_nom || c.client_telephone}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>
+                    <span className="inline-flex items-center gap-1"><MapPin size={13} />{c.zone || "—"}</span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.livreur_nom || "—"}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.moyen_paiement || "—"}</td>
+                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(c.total)}</td>
+                  <td className="px-4 py-3"><StatutBadge statut={c.statut} /></td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={c.statut}
+                      onChange={(e) => changerStatut(c.id, e.target.value)}
+                      className="rounded-full border px-2 py-1 text-xs font-bold"
+                      style={{ borderColor: LINE, color: INK }}
+                    >
+                      {statuts.slice(1).map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => setHistoriqueOuvert(c)}
+                      className="rounded-full px-3 py-1 text-xs font-black"
+                      style={{ backgroundColor: SAND, color: OCHRE }}
+                    >
+                      Historique
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {historiqueOuvert && (
+        <HistoriqueCommandeModal commande={historiqueOuvert} onClose={() => setHistoriqueOuvert(null)} />
+      )}
     </div>
   );
 }
 
 function StockPage() {
+  const { data: produits, erreur, chargement } = useApiData(() => api.produits(), []);
+
+  if (chargement || erreur) {
+    return (
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+        <EtatChargement erreur={erreur} chargement={chargement} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
       <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
@@ -573,25 +697,26 @@ function StockPage() {
             </tr>
           </thead>
           <tbody>
-            {STOCK.map((s) => {
-              const pct = Math.min(100, (s.niveau / (s.seuil * 3)) * 100);
+            {produits.map((s) => {
+              const alerte = s.stock <= s.seuil_alerte;
+              const pct = Math.min(100, (s.stock / (s.seuil_alerte * 3)) * 100);
               return (
-                <tr key={s.produit} className="border-t" style={{ borderColor: LINE }}>
+                <tr key={s.id} className="border-t" style={{ borderColor: LINE }}>
                   <td className="px-4 py-3">
                     <span className="mr-2 text-lg">{s.emoji}</span>
-                    <span className="font-black" style={{ color: INK }}>{s.produit}</span>
+                    <span className="font-black" style={{ color: INK }}>{s.nom}</span>
                   </td>
-                  <td className="px-4 py-3 font-bold" style={{ color: INK }}>{s.niveau} {s.unite}</td>
+                  <td className="px-4 py-3 font-bold" style={{ color: INK }}>{s.stock} {s.unite}</td>
                   <td className="px-4 py-3">
                     <div className="h-2 w-40 overflow-hidden rounded-full" style={{ backgroundColor: SAND }}>
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${pct}%`, backgroundColor: s.alerte ? RED : GREEN }}
+                        style={{ width: `${pct}%`, backgroundColor: alerte ? RED : GREEN }}
                       />
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {s.alerte ? (
+                    {alerte ? (
                       <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#F7E4E2", color: RED }}>
                         <AlertTriangle size={12} /> Stock faible
                       </span>
@@ -612,6 +737,16 @@ function StockPage() {
 }
 
 function ClientsPage() {
+  const { data: clients, erreur, chargement } = useApiData(() => api.clients(), []);
+
+  if (chargement || erreur) {
+    return (
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+        <EtatChargement erreur={erreur} chargement={chargement} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
       <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
@@ -619,27 +754,32 @@ function ClientsPage() {
           <thead>
             <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
               <th className="px-4 py-3">Client</th>
+              <th className="px-4 py-3">Téléphone</th>
+              <th className="px-4 py-3">Type d'activité</th>
               <th className="px-4 py-3">Segment</th>
-              <th className="px-4 py-3">Commandes</th>
-              <th className="px-4 py-3">Panier moyen</th>
               <th className="px-4 py-3">Crédit utilisé / plafond</th>
             </tr>
           </thead>
           <tbody>
-            {CLIENTS.map((c) => (
-              <tr key={c.nom} className="border-t" style={{ borderColor: LINE }}>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.nom}</td>
+            {clients.length === 0 && (
+              <tr><td colSpan={5} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucun client pour le moment</td></tr>
+            )}
+            {clients.map((c) => (
+              <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
+                <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.commerce || "—"}</td>
+                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.telephone}</td>
+                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.type_activite || "—"}</td>
                 <td className="px-4 py-3">
                   <span
                     className="rounded-full px-2.5 py-1 text-xs font-black text-white"
-                    style={{ backgroundColor: SEGMENT_STYLE[c.segment] }}
+                    style={{ backgroundColor: SEGMENT_STYLE[c.segment] || MUTED }}
                   >
                     {c.segment}
                   </span>
                 </td>
-                <td className="px-4 py-3 font-bold" style={{ color: INK }}>{c.commandes}</td>
-                <td className="px-4 py-3 font-bold" style={{ color: INK }}>{fmt(c.panierMoyen)}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.credit === "—" ? "—" : `${c.credit} F`}</td>
+                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>
+                  {c.credit_plafond > 0 ? `${fmt(c.credit_utilise)} / ${fmt(c.credit_plafond)}` : "—"}
+                </td>
               </tr>
             ))}
           </tbody>
