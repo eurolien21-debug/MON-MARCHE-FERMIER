@@ -740,7 +740,7 @@ function BottomNav2({ ecran, setEcran, badge }) {
 }
 
 // ---- Écran 1 : Commander (accueil + catalogue + panier) ----
-function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profil, produits, produitsChargement, produitsErreur }) {
+function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profil, produits, produitsChargement, produitsErreur, commandeEnCours, onSuivreCommande }) {
   const [panierOuvert, setPanierOuvert] = useState(false);
   const items = Object.entries(panier).map(([id, q]) => ({ ...produits.find((p) => p.id === id), q })).filter(Boolean);
   const total = items.reduce((s, i) => s + i.prix * i.q, 0);
@@ -761,6 +761,18 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
   return (
     <div className="flex h-full flex-col">
       <TopBar2 titre="Que commandez-vous ?" sousTitre={`Bonjour ${profil.commerce || "chez vous"} 👋`} onAvatar={onOuvrirCompte} />
+
+      {commandeEnCours && (
+        <div className="px-5 pb-1">
+          <button
+            onClick={onSuivreCommande}
+            className="btn-tap flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black"
+            style={{ backgroundColor: "#2F6B4F", color: "#FBF3E3" }}
+          >
+            <Truck size={16} /> Suivre ma commande en cours
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-5 pb-2">
         <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: "#8B5E34" }}>Catalogue</p>
@@ -931,6 +943,15 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommand
                 )}
               </div>
             </div>
+            {!livree && commandeLive?.livreur_telephone && (
+              <a
+                href={`tel:${commandeLive.livreur_telephone}`}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 py-3 text-sm font-black"
+                style={{ borderColor: "#2F6B4F", color: "#2F6B4F", textDecoration: "none" }}
+              >
+                📞 Appeler {commandeLive.livreur_nom || "le livreur"} ({commandeLive.livreur_telephone})
+              </a>
+            )}
             {!livree && aPosition && !aDestinationGPS && (
               <p className="mb-3 text-xs font-bold" style={{ color: "#8B5E34" }}>
                 Temps estimé indisponible : votre adresse de livraison n'a pas de position GPS enregistrée.
@@ -1094,6 +1115,8 @@ export default function ClientApp() {
               produits={produits}
               produitsChargement={produitsChargement}
               produitsErreur={produitsErreur}
+              commandeEnCours={commandeEnCours}
+              onSuivreCommande={() => setEcran("espace")}
               onOuvrirCompte={() => setCompteOuvert(true)}
               onContinuer={() => setFinaliserOuvert(true)}
             />
