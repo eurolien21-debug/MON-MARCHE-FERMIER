@@ -711,9 +711,19 @@ function TopBar2({ titre, sousTitre, onAvatar }) {
         {sousTitre && <p className="text-sm font-bold" style={{ color: "#8B5E34" }}>{sousTitre}</p>}
         <h1 className="text-2xl font-black leading-tight" style={{ fontFamily: "Fraunces, serif", color: "#2B2620" }}>{titre}</h1>
       </div>
-      <button onClick={onAvatar} aria-label="Mon compte" className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: "#2F6B4F" }}>
-        <User size={18} color="#FBF3E3" />
-      </button>
+      <div className="flex items-center gap-2">
+        <a
+          href="/"
+          aria-label="Retour à l'accueil"
+          className="btn-tap flex h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: "#F1E4C4" }}
+        >
+          <Home size={18} style={{ color: "#5A4326" }} />
+        </a>
+        <button onClick={onAvatar} aria-label="Mon compte" className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: "#2F6B4F" }}>
+          <User size={18} color="#FBF3E3" />
+        </button>
+      </div>
     </div>
   );
 }
