@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import ClientApp from "./pages/ClientApp.jsx";
 import AdminApp from "./pages/AdminApp.jsx";
 import LivreurApp from "./pages/LivreurApp.jsx";
+import LoginGate from "./pages/LoginGate.jsx";
 import "./index.css";
 
 function Accueil() {
@@ -77,8 +78,22 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Routes>
         <Route path="/" element={<Accueil />} />
         <Route path="/app" element={<ClientApp />} />
-        <Route path="/admin" element={<AdminApp />} />
-        <Route path="/livreur" element={<LivreurApp />} />
+        <Route
+          path="/admin"
+          element={
+            <LoginGate cleStockage="mcm_admin_ok">
+              <AdminApp />
+            </LoginGate>
+          }
+        />
+        <Route
+          path="/livreur"
+          element={
+            <LoginGate cleStockage="mcm_livreur_ok">
+              <LivreurApp />
+            </LoginGate>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
