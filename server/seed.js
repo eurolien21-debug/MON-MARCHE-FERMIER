@@ -11,6 +11,17 @@ const PRODUITS = [
   { slug: "brochette", nom: "Brochettes", emoji: "🍢", photo: "https://loremflickr.com/300/300/chicken,skewer", prix: 500, unite: "unité", stock: 200, seuil_alerte: 40 },
 ];
 
+const ZONES = [
+  { zone: "Cocody", prix: 1000, distance: "3 km", temps_estime: "18 min", livraison_gratuite_des: 50000 },
+  { zone: "Angré", prix: 1200, distance: "5 km", temps_estime: "22 min", livraison_gratuite_des: 50000 },
+  { zone: "Marcory", prix: 1500, distance: "8 km", temps_estime: "30 min", livraison_gratuite_des: 60000 },
+  { zone: "Yopougon", prix: 2000, distance: "12 km", temps_estime: "40 min", livraison_gratuite_des: 75000 },
+  { zone: "Treichville", prix: 1500, distance: "7 km", temps_estime: "28 min", livraison_gratuite_des: 60000 },
+  { zone: "Abobo", prix: 2200, distance: "14 km", temps_estime: "45 min", livraison_gratuite_des: 75000 },
+  { zone: "Bingerville", prix: 2500, distance: "16 km", temps_estime: "50 min", livraison_gratuite_des: 80000 },
+  { zone: "Port-Bouët", prix: 2000, distance: "11 km", temps_estime: "38 min", livraison_gratuite_des: 70000 },
+];
+
 async function seed() {
   try {
     for (const p of PRODUITS) {
@@ -21,7 +32,15 @@ async function seed() {
         [p.slug, p.nom, p.emoji, p.photo, p.prix, p.unite, p.stock, p.seuil_alerte]
       );
     }
-    console.log("Produits de départ insérés (ou déjà présents).");
+    for (const z of ZONES) {
+      await pool.query(
+        `INSERT INTO zones_livraison (zone, prix, distance, temps_estime, livraison_gratuite_des)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (zone) DO NOTHING`,
+        [z.zone, z.prix, z.distance, z.temps_estime, z.livraison_gratuite_des]
+      );
+    }
+    console.log("Produits et zones de départ insérés (ou déjà présents).");
   } catch (err) {
     console.error("Échec du seed :", err.message);
     process.exit(1);
