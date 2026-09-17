@@ -27,10 +27,35 @@ export const api = {
   commande: (id) => requete(`/api/orders/${id}`),
   commandeParNumero: (numero) => requete(`/api/orders?numero=${encodeURIComponent(numero)}`),
   commandesDisponibles: () => requete("/api/orders?disponibles=1"),
+  commandesLivreur: (telephone) => requete(`/api/orders?livreur_telephone=${encodeURIComponent(telephone)}`),
   accepterCommande: (id, livreur_nom, livreur_telephone) => requete(`/api/orders/${id}/accepter`, { method: "PATCH", body: JSON.stringify({ livreur_nom, livreur_telephone }) }),
   majPosition: (id, position) => requete(`/api/orders/${id}/position`, { method: "PATCH", body: JSON.stringify(position) }),
   creerCommande: (commande) => requete("/api/orders", { method: "POST", body: JSON.stringify(commande) }),
   majCommande: (id, champs) => requete(`/api/orders/${id}`, { method: "PATCH", body: JSON.stringify(champs) }),
+  evenementsCommande: (id) => requete(`/api/orders/${id}/evenements`),
+
+  zones: () => requete("/api/zones"),
+  creerZone: (zone) => requete("/api/zones", { method: "POST", body: JSON.stringify(zone) }),
+  majZone: (id, champs) => requete(`/api/zones/${id}`, { method: "PATCH", body: JSON.stringify(champs) }),
+  supprimerZone: (id) => requete(`/api/zones/${id}`, { method: "DELETE" }),
+
+  livreurs: () => requete("/api/livreurs"),
+
+  financeKpis: () => requete("/api/finance/kpis"),
+
+  rapportVentesProduits: () => requete("/api/rapports/ventes-produits"),
+  rapportClientsMois: () => requete("/api/rapports/clients-mois"),
+  rapportPerfLivreurs: () => requete("/api/rapports/perf-livreurs"),
+
+  staff: () => requete("/api/staff"),
+  creerStaff: (u) => requete("/api/staff", { method: "POST", body: JSON.stringify(u) }),
+  majStaff: (id, champs) => requete(`/api/staff/${id}`, { method: "PATCH", body: JSON.stringify(champs) }),
+  supprimerStaff: (id) => requete(`/api/staff/${id}`, { method: "DELETE" }),
+
+  bonsCommande: () => requete("/api/bons-commande"),
+  bonCommande: (id) => requete(`/api/bons-commande/${id}`),
+  creerBonCommande: (bc) => requete("/api/bons-commande", { method: "POST", body: JSON.stringify(bc) }),
+  majBonCommande: (id, champs) => requete(`/api/bons-commande/${id}`, { method: "PATCH", body: JSON.stringify(champs) }),
 };
 
 // Calcule un vrai itinéraire routier (distance + temps estimé) entre deux points
