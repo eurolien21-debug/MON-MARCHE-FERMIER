@@ -55,6 +55,11 @@ export default function LivreurApp() {
     typeof Notification !== "undefined" ? Notification.permission : "unsupported"
   );
 
+  const [recapOuvert, setRecapOuvert] = useState(false);
+  const [recapCommandes, setRecapCommandes] = useState([]);
+  const [recapChargement, setRecapChargement] = useState(false);
+  const [recapErreur, setRecapErreur] = useState(null);
+
   const [commandeSelectionnee, setCommandeSelectionnee] = useState(null); // détail (avec items) en cours de consultation
   const [chargementDetail, setChargementDetail] = useState(false);
   const [erreurDetail, setErreurDetail] = useState(null);
@@ -109,6 +114,20 @@ export default function LivreurApp() {
     const t = setInterval(rafraichir, 8000);
     return () => { annule = true; clearInterval(t); };
   }, [nomValide, commandeAcceptee, permissionNotif]);
+
+  const ouvrirRecap = async () => {
+    setRecapOuvert(true);
+    setRecapChargement(true);
+    setRecapErreur(null);
+    try {
+      const rows = await api.commandesLivreur(telLivreur);
+      setRecapCommandes(rows);
+    } catch (e) {
+      setRecapErreur(e.message);
+    } finally {
+      setRecapChargement(false);
+    }
+  };
 
   const ouvrirDetail = async (commandeResume) => {
     setErreurDetail(null);
@@ -230,7 +249,12 @@ export default function LivreurApp() {
         {/* Étape 2 : liste des commandes disponibles (façon notifications) */}
         {nomValide && !commandeAcceptee && !commandeSelectionnee && !rapport && (
           <>
-            <p className="mb-3 text-sm font-bold" style={{ color: OCHRE }}>Bonjour {nomLivreur}</p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-bold" style={{ color: OCHRE }}>Bonjour {nomLivreur}</p>
+              <button onClick={ouvrirRecap} className="text-xs font-black underline" style={{ color: GREEN }}>
+                Mes livraisons
+              </button>
+            </div>
             <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: OCHRE }}>
               Commandes disponibles {disponibles.length > 0 && `(${disponibles.length})`}
             </p>
@@ -374,6 +398,57 @@ export default function LivreurApp() {
           </>
         )}
       </div>
+
+      {recapOuvert && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          style={{ backgroundColor: "rgba(43,38,32,0.5)" }}
+          onClick={() => setRecapOuvert(false)}
+        >
+          <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-[2rem] p-6" style={{ backgroundColor: CREAM }} onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-black" style={{ color: INK }}>Mes livraisons</h2>
+              <button onClick={() => setRecapOuvert(false)} className="text-xs font-black" style={{ color: OCHRE }}>Fermer ✕</button>
+            </div>
+
+            {recapChargement && <p className="text-sm font-bold" style={{ color: OCHRE }}>Chargement...</p>}
+            {recapErreur && <p className="text-sm font-bold" style={{ color: RED }}>{recapErreur}</p>}
+
+            {!recapChargement && !recapErreur && (() => {
+              const enCours = recapCommandes.filter((c) => !["Livrée", "Annulée"].includes(c.statut));
+              const effectuees = recapCommandes.filter((c) => c.statut === "Livrée");
+              const annulees = recapCommandes.filter((c) => c.statut === "Annulée");
+              const Groupe = ({ titre, couleur, liste }) => (
+                <div className="mb-4">
+                  <p className="mb-2 text-xs font-black uppercase tracking-wider" style={{ color: OCHRE }}>{titre} ({liste.length})</p>
+                  {liste.length === 0 && <p className="text-xs font-semibold" style={{ color: "#B8AC94" }}>Aucune</p>}
+                  <div className="flex flex-col gap-2">
+                    {liste.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between gap-2 rounded-2xl border-2 bg-white px-3 py-2.5" style={{ borderColor: "#EEE3CE" }}>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black" style={{ color: INK }}>{c.numero}</p>
+                          <p className="truncate text-xs font-semibold" style={{ color: "#B8AC94" }}>{c.client_nom || c.client_telephone}</p>
+                        </div>
+                        <span className="shrink-0 whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-black" style={{ backgroundColor: SAND, color: couleur }}>{c.statut}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+              return (
+                <>
+                  <Groupe titre="En cours" couleur="#E8A23D" liste={enCours} />
+                  <Groupe titre="Effectuées" couleur={GREEN} liste={effectuees} />
+                  <Groupe titre="Annulées" couleur={RED} liste={annulees} />
+                  {recapCommandes.length === 0 && (
+                    <p className="text-sm font-bold" style={{ color: "#5A4326" }}>Aucune livraison enregistrée pour ce numéro pour le moment.</p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
