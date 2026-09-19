@@ -103,88 +103,20 @@ const SEGMENT_STYLE = {
 };
 
 // ---- Livraisons ----
-const ZONES = [
-  { zone: "Cocody", prix: 1000, distance: "3 km", temps: "18 min", gratuitDes: 50000 },
-  { zone: "Angré", prix: 1200, distance: "5 km", temps: "22 min", gratuitDes: 50000 },
-  { zone: "Marcory", prix: 1500, distance: "8 km", temps: "30 min", gratuitDes: 60000 },
-  { zone: "Yopougon", prix: 2000, distance: "12 km", temps: "40 min", gratuitDes: 75000 },
-  { zone: "Treichville", prix: 1500, distance: "7 km", temps: "28 min", gratuitDes: 60000 },
-  { zone: "Abobo", prix: 2200, distance: "14 km", temps: "45 min", gratuitDes: 75000 },
-  { zone: "Bingerville", prix: 2500, distance: "16 km", temps: "50 min", gratuitDes: 80000 },
-  { zone: "Port-Bouët", prix: 2000, distance: "11 km", temps: "38 min", gratuitDes: 70000 },
-];
-
-const LIVREURS = [
-  { nom: "Ibrahim Koné", statut: "En livraison", mission: "CMD-1039 → Angré", livraisonsJour: 6 },
-  { nom: "Adama Traoré", statut: "Disponible", mission: "—", livraisonsJour: 8 },
-  { nom: "Fatoumata Sy", statut: "En livraison", mission: "CMD-1042 → Cocody", livraisonsJour: 5 },
-  { nom: "Souleymane Bamba", statut: "Hors ligne", mission: "—", livraisonsJour: 0 },
-  { nom: "Aïcha Ouattara", statut: "Disponible", mission: "—", livraisonsJour: 7 },
-];
-
-const LIVREUR_STATUT_STYLE = {
-  "Disponible": { bg: "#E4EEE8", color: "#2F6B4F" },
-  "En livraison": { bg: "#FBEBD1", color: "#E8A23D" },
-  "Hors ligne": { bg: "#EFEAE0", color: "#9C8F72" },
-};
+// (zones et livreurs sont maintenant chargés depuis l'API, voir LivraisonsPage)
 
 // ---- Finance ----
-const RAPPROCHEMENT = [
-  { commande: "CMD-1042", paiement: "Confirmé", livraison: "En cours", facture: "En attente" },
-  { commande: "CMD-1041", paiement: "Confirmé", livraison: "Livrée", facture: "Émise" },
-  { commande: "CMD-1040", paiement: "En attente", livraison: "Non démarrée", facture: "—" },
-  { commande: "CMD-1039", paiement: "Confirmé", livraison: "En cours", facture: "En attente" },
-  { commande: "CMD-1038", paiement: "Remboursé", livraison: "Annulée", facture: "Annulée" },
-];
-
-const TRANSACTIONS = [
-  { id: "TRX-8841", client: "Maquis Chez Awa", montant: 68000, moyen: "Orange Money", statut: "Réussi", date: "Aujourd'hui, 09:12" },
-  { id: "TRX-8840", client: "Resto Le Bon Goût", montant: 142500, moyen: "Wave", statut: "Réussi", date: "Aujourd'hui, 08:47" },
-  { id: "TRX-8839", client: "Superette Diallo", montant: 305000, moyen: "Crédit pro", statut: "En attente", date: "Hier, 17:20" },
-  { id: "TRX-8838", client: "Hôtel Ivoire Plage", montant: 512000, moyen: "Carte bancaire", statut: "Remboursé", date: "Hier, 14:05" },
-];
-
 const TRX_STATUT_STYLE = {
-  "Réussi": { bg: "#E4EEE8", color: "#2F6B4F" },
+  "Payé": { bg: "#E4EEE8", color: "#2F6B4F" },
   "En attente": { bg: "#F1E4C4", color: "#8B5E34" },
   "Remboursé": { bg: "#F7E4E2", color: "#C1443B" },
 };
 
 // ---- Rapports ----
-const VENTES_PAR_PRODUIT = [
-  { produit: "Poulet", ventes: 4200000 },
-  { produit: "Œufs", ventes: 1800000 },
-  { produit: "Cuisses", ventes: 2100000 },
-  { produit: "Pilons", ventes: 1300000 },
-  { produit: "Poisson", ventes: 1600000 },
-  { produit: "Brochettes", ventes: 700000 },
-];
-
-const CLIENTS_MOIS = [
-  { mois: "Avr", nouveaux: 12, actifs: 88 },
-  { mois: "Mai", nouveaux: 18, actifs: 102 },
-  { mois: "Jun", nouveaux: 15, actifs: 110 },
-  { mois: "Jul", nouveaux: 22, actifs: 128 },
-  { mois: "Août", nouveaux: 27, actifs: 145 },
-];
-
-const PERF_LIVREURS = [
-  { nom: "Adama Traoré", livraisons: 210, tempsMoyen: "24 min", retards: "2%" },
-  { nom: "Ibrahim Koné", livraisons: 188, tempsMoyen: "27 min", retards: "4%" },
-  { nom: "Fatoumata Sy", livraisons: 176, tempsMoyen: "22 min", retards: "1%" },
-  { nom: "Aïcha Ouattara", livraisons: 165, tempsMoyen: "29 min", retards: "6%" },
-];
+// (ventes, clients et performance livreurs sont maintenant chargés depuis l'API)
 
 // ---- Utilisateurs & Rôles ----
-const UTILISATEURS = [
-  { nom: "Dan Eurolien", role: "Super Admin", email: "dan@monmarchefermier.ci", statut: "Actif" },
-  { nom: "Awa Bamba", role: "Manager", email: "awa@monmarchefermier.ci", statut: "Actif" },
-  { nom: "Koffi N'Guessan", role: "Commercial", email: "koffi@monmarchefermier.ci", statut: "Actif" },
-  { nom: "Mariam Cissé", role: "Caissier", email: "mariam@monmarchefermier.ci", statut: "Actif" },
-  { nom: "Bakary Sanogo", role: "Stock", email: "bakary@monmarchefermier.ci", statut: "Inactif" },
-  { nom: "Service Client CI", role: "Service client", email: "support@monmarchefermier.ci", statut: "Actif" },
-];
-
+// (le répertoire de l'équipe est maintenant chargé depuis l'API, voir UtilisateursPage)
 const ROLE_STYLE = {
   "Super Admin": "#6B4F9E",
   "Admin": "#8B5E34",
@@ -195,87 +127,8 @@ const ROLE_STYLE = {
   "Service client": "#C1443B",
 };
 
-// ---- Audit ----
-// ---- Suivi live : positions GPS, commandes, preuves de paiement ----
-// NOTE: coordonnées et preuves d'exemple — à remplacer par les données
-// réelles une fois le backend (API + base de données) branché.
-const COMMANDES_GPS = [
-  {
-    id: "CMD-1042",
-    client: "Maquis Chez Awa",
-    zone: "Cocody",
-    clientPos: { lat: 5.3599, lng: -3.9878 },
-    livreur: "Fatoumata Sy",
-    livreurPos: { lat: 5.3567, lng: -3.9901 },
-    statut: "Livreur en route",
-  },
-  {
-    id: "CMD-1039",
-    client: "Panini Express",
-    zone: "Angré",
-    clientPos: { lat: 5.3803, lng: -3.9698 },
-    livreur: "Ibrahim Koné",
-    livreurPos: { lat: 5.3775, lng: -3.9722 },
-    statut: "Livreur en route",
-  },
-  {
-    id: "CMD-1041",
-    client: "Resto Le Bon Goût",
-    zone: "Marcory",
-    clientPos: { lat: 5.2926, lng: -3.9976 },
-    livreur: "Adama Traoré",
-    livreurPos: { lat: 5.2926, lng: -3.9976 },
-    statut: "Livrée",
-  },
-  {
-    id: "CMD-1040",
-    client: "Superette Diallo",
-    zone: "Yopougon",
-    clientPos: { lat: 5.3364, lng: -4.0742 },
-    livreur: null,
-    livreurPos: null,
-    statut: "En attente",
-  },
-];
-
-const PREUVES_PAIEMENT = [
-  {
-    commande: "CMD-1042",
-    client: "Maquis Chez Awa",
-    montant: 68000,
-    moyen: "Orange Money",
-    reference: "OM-2608-77413",
-    date: "Aujourd'hui, 09:12",
-    statut: "Réussi",
-  },
-  {
-    commande: "CMD-1041",
-    client: "Resto Le Bon Goût",
-    montant: 142500,
-    moyen: "Wave",
-    reference: "WV-2608-90215",
-    date: "Aujourd'hui, 08:47",
-    statut: "Réussi",
-  },
-  {
-    commande: "CMD-1040",
-    client: "Superette Diallo",
-    montant: 305000,
-    moyen: "Crédit professionnel",
-    reference: "CR-2608-00042",
-    date: "Hier, 17:20",
-    statut: "En attente",
-  },
-  {
-    commande: "CMD-1039",
-    client: "Panini Express",
-    montant: 41000,
-    moyen: "MTN MoMo",
-    reference: "MTN-2608-55871",
-    date: "Aujourd'hui, 08:02",
-    statut: "Réussi",
-  },
-];
+// ---- Suivi live : positions GPS et preuves de paiement ----
+// (chargées depuis l'API désormais, voir SuiviLivePage)
 
 const AUDIT = [
   { qui: "Awa Bamba", quoi: "Modification du prix — Poulet de chair", quand: "Aujourd'hui, 10:32", avant: "3 400 F", apres: "3 500 F" },
@@ -673,7 +526,171 @@ function CommandesPage() {
   );
 }
 
+function DetailBonCommandeModal({ bonId, onClose }) {
+  const { data: bc, erreur, chargement } = useApiData(() => api.bonCommande(bonId), [bonId]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ backgroundColor: "rgba(43,38,32,0.5)" }} onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-1 flex items-center justify-between">
+          <p className="text-lg font-black" style={{ color: INK }}>{bc?.numero || "..."}</p>
+          <button onClick={onClose} className="text-xs font-black" style={{ color: MUTED }}>Fermer ✕</button>
+        </div>
+        <EtatChargement erreur={erreur} chargement={chargement} />
+        {!chargement && !erreur && bc && (
+          <>
+            <p className="mb-1 text-xs font-bold" style={{ color: OCHRE }}>Fournisseur : {bc.fournisseur || "—"}</p>
+            <p className="mb-3 text-xs font-bold" style={{ color: MUTED }}>Statut : {bc.statut}{bc.recu_a ? ` — reçu le ${new Date(bc.recu_a).toLocaleDateString("fr-FR")}` : ""}</p>
+            <div className="mb-2 flex flex-col gap-1.5">
+              {bc.items.map((it) => (
+                <div key={it.id} className="flex justify-between text-sm font-semibold" style={{ color: INK }}>
+                  <span>{it.quantite} × {it.nom}</span>
+                  {it.prix_unitaire != null && <span>{fmt(it.quantite * it.prix_unitaire)}</span>}
+                </div>
+              ))}
+            </div>
+            {bc.notes && <p className="mt-2 text-xs font-semibold" style={{ color: MUTED }}>Note : {bc.notes}</p>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BonsCommandePanel({ produits }) {
+  const [version, setVersion] = useState(0);
+  const { data: bons, erreur, chargement } = useApiData(() => api.bonsCommande(), [version]);
+  const [fournisseur, setFournisseur] = useState("");
+  const [quantites, setQuantites] = useState({});
+  const [creationEnCours, setCreationEnCours] = useState(false);
+  const [detailOuvert, setDetailOuvert] = useState(null);
+
+  const statuts = ["En attente", "Commandé", "Reçu", "Annulé"];
+  const styleStatut = {
+    "En attente": { bg: SAND, color: OCHRE },
+    "Commandé": { bg: "#FBEBD1", color: GOLD },
+    "Reçu": { bg: "#E4EEE8", color: GREEN },
+    "Annulé": { bg: "#F7E4E2", color: RED },
+  };
+
+  const creerBon = async () => {
+    const items = Object.entries(quantites)
+      .filter(([, q]) => Number(q) > 0)
+      .map(([product_id, q]) => ({ product_id: Number(product_id), quantite: Number(q) }));
+    if (items.length === 0) return;
+    setCreationEnCours(true);
+    try {
+      await api.creerBonCommande({ fournisseur: fournisseur || null, items });
+      setFournisseur("");
+      setQuantites({});
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    } finally {
+      setCreationEnCours(false);
+    }
+  };
+
+  const changerStatut = async (id, statut) => {
+    try {
+      await api.majBonCommande(id, { statut });
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    }
+  };
+
+  return (
+    <div>
+      <SectionTitle>Nouveau bon de commande</SectionTitle>
+      <div className="mb-6 rounded-2xl border bg-white p-4" style={{ borderColor: LINE }}>
+        <input
+          value={fournisseur}
+          onChange={(e) => setFournisseur(e.target.value)}
+          placeholder="Fournisseur (facultatif)"
+          className="mb-3 w-full max-w-sm rounded-xl border px-3 py-2 text-sm font-semibold"
+          style={{ borderColor: LINE, color: INK }}
+        />
+        <div className="mb-3 grid grid-cols-3 gap-3">
+          {produits.map((p) => (
+            <div key={p.id} className="flex items-center gap-2 rounded-xl border px-3 py-2" style={{ borderColor: LINE }}>
+              <span className="text-lg">{p.emoji}</span>
+              <span className="flex-1 text-xs font-bold" style={{ color: INK }}>{p.nom}</span>
+              <input
+                type="number"
+                min="0"
+                value={quantites[p.id] || ""}
+                onChange={(e) => setQuantites({ ...quantites, [p.id]: e.target.value })}
+                placeholder="0"
+                className="w-16 rounded-lg border px-2 py-1 text-sm font-bold"
+                style={{ borderColor: LINE, color: INK }}
+              />
+            </div>
+          ))}
+        </div>
+        <button onClick={creerBon} disabled={creationEnCours} className="flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-black text-white" style={{ backgroundColor: GREEN, opacity: creationEnCours ? 0.6 : 1 }}>
+          <Plus size={14} /> Créer le bon de commande
+        </button>
+      </div>
+
+      <SectionTitle>Historique des bons de commande</SectionTitle>
+      <EtatChargement erreur={erreur} chargement={chargement} />
+      {!chargement && !erreur && (
+        <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                <th className="px-4 py-3">Bon</th>
+                <th className="px-4 py-3">Fournisseur</th>
+                <th className="px-4 py-3">Articles</th>
+                <th className="px-4 py-3">Montant</th>
+                <th className="px-4 py-3">Statut</th>
+                <th className="px-4 py-3">Changer</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {(bons || []).length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucun bon de commande pour le moment</td></tr>
+              )}
+              {(bons || []).map((b) => {
+                const s = styleStatut[b.statut] || styleStatut["En attente"];
+                return (
+                  <tr key={b.id} className="border-t" style={{ borderColor: LINE }}>
+                    <td className="px-4 py-3 font-black" style={{ color: INK }}>{b.numero}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{b.fournisseur || "—"}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{b.nb_articles}</td>
+                    <td className="px-4 py-3 font-black" style={{ color: INK }}>{Number(b.montant_total) > 0 ? fmt(Number(b.montant_total)) : "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: s.bg, color: s.color }}>{b.statut}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={b.statut}
+                        onChange={(e) => changerStatut(b.id, e.target.value)}
+                        className="rounded-full border px-2 py-1 text-xs font-bold"
+                        style={{ borderColor: LINE, color: INK }}
+                      >
+                        {statuts.map((s2) => <option key={s2} value={s2}>{s2}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setDetailOuvert(b.id)} className="rounded-full px-3 py-1 text-xs font-black" style={{ backgroundColor: SAND, color: OCHRE }}>Détails</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {detailOuvert && <DetailBonCommandeModal bonId={detailOuvert} onClose={() => setDetailOuvert(null)} />}
+    </div>
+  );
+}
+
 function StockPage() {
+  const [onglet, setOnglet] = useState("stock");
   const { data: produits, erreur, chargement } = useApiData(() => api.produits(), []);
 
   if (chargement || erreur) {
@@ -686,52 +703,73 @@ function StockPage() {
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Produit</th>
-              <th className="px-4 py-3">Stock disponible</th>
-              <th className="px-4 py-3">Niveau</th>
-              <th className="px-4 py-3">Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {produits.map((s) => {
-              const alerte = s.stock <= s.seuil_alerte;
-              const pct = Math.min(100, (s.stock / (s.seuil_alerte * 3)) * 100);
-              return (
-                <tr key={s.id} className="border-t" style={{ borderColor: LINE }}>
-                  <td className="px-4 py-3">
-                    <span className="mr-2 text-lg">{s.emoji}</span>
-                    <span className="font-black" style={{ color: INK }}>{s.nom}</span>
-                  </td>
-                  <td className="px-4 py-3 font-bold" style={{ color: INK }}>{s.stock} {s.unite}</td>
-                  <td className="px-4 py-3">
-                    <div className="h-2 w-40 overflow-hidden rounded-full" style={{ backgroundColor: SAND }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${pct}%`, backgroundColor: alerte ? RED : GREEN }}
-                      />
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {alerte ? (
-                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#F7E4E2", color: RED }}>
-                        <AlertTriangle size={12} /> Stock faible
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#E4EEE8", color: GREEN }}>
-                        <CheckCircle2 size={12} /> Suffisant
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="mb-4 flex gap-2">
+        <button
+          onClick={() => setOnglet("stock")}
+          className="rounded-full px-4 py-2 text-xs font-black"
+          style={{ backgroundColor: onglet === "stock" ? GREEN : "#FFFFFF", color: onglet === "stock" ? CREAM : MUTED, border: `1px solid ${onglet === "stock" ? GREEN : LINE}` }}
+        >
+          Stock
+        </button>
+        <button
+          onClick={() => setOnglet("bons")}
+          className="rounded-full px-4 py-2 text-xs font-black"
+          style={{ backgroundColor: onglet === "bons" ? GREEN : "#FFFFFF", color: onglet === "bons" ? CREAM : MUTED, border: `1px solid ${onglet === "bons" ? GREEN : LINE}` }}
+        >
+          Bons de commande
+        </button>
       </div>
+
+      {onglet === "stock" && (
+        <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                <th className="px-4 py-3">Produit</th>
+                <th className="px-4 py-3">Stock disponible</th>
+                <th className="px-4 py-3">Niveau</th>
+                <th className="px-4 py-3">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {produits.map((s) => {
+                const alerte = s.stock <= s.seuil_alerte;
+                const pct = Math.min(100, (s.stock / (s.seuil_alerte * 3)) * 100);
+                return (
+                  <tr key={s.id} className="border-t" style={{ borderColor: LINE }}>
+                    <td className="px-4 py-3">
+                      <span className="mr-2 text-lg">{s.emoji}</span>
+                      <span className="font-black" style={{ color: INK }}>{s.nom}</span>
+                    </td>
+                    <td className="px-4 py-3 font-bold" style={{ color: INK }}>{s.stock} {s.unite}</td>
+                    <td className="px-4 py-3">
+                      <div className="h-2 w-40 overflow-hidden rounded-full" style={{ backgroundColor: SAND }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, backgroundColor: alerte ? RED : GREEN }}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {alerte ? (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#F7E4E2", color: RED }}>
+                          <AlertTriangle size={12} /> Stock faible
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#E4EEE8", color: GREEN }}>
+                          <CheckCircle2 size={12} /> Suffisant
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {onglet === "bons" && <BonsCommandePanel produits={produits} />}
     </div>
   );
 }
@@ -808,139 +846,216 @@ function SectionTitle({ children }) {
 }
 
 function LivraisonsPage() {
+  const [version, setVersion] = useState(0);
+  const { data: zones, erreur: erreurZones, chargement: chargementZones } = useApiData(() => api.zones(), [version]);
+  const { data: livreurs, erreur: erreurLivreurs, chargement: chargementLivreurs } = useApiData(() => api.livreurs(), [version]);
+  const [nouvelleZone, setNouvelleZone] = useState({ zone: "", prix: "" });
+  const [ajoutEnCours, setAjoutEnCours] = useState(false);
+
+  const ajouterZone = async () => {
+    if (!nouvelleZone.zone || !nouvelleZone.prix) return;
+    setAjoutEnCours(true);
+    try {
+      await api.creerZone({ zone: nouvelleZone.zone, prix: Number(nouvelleZone.prix) });
+      setNouvelleZone({ zone: "", prix: "" });
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    } finally {
+      setAjoutEnCours(false);
+    }
+  };
+
+  const supprimerZone = async (id) => {
+    try {
+      await api.supprimerZone(id);
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
       <div className="mb-4 flex items-center justify-between">
         <SectionTitle>Zones de livraison</SectionTitle>
-        <button className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black text-white" style={{ backgroundColor: GREEN }}>
-          <Plus size={14} /> Nouvelle zone
+      </div>
+      <div className="mb-3 flex items-end gap-2">
+        <input
+          value={nouvelleZone.zone}
+          onChange={(e) => setNouvelleZone({ ...nouvelleZone, zone: e.target.value })}
+          placeholder="Nom de la zone"
+          className="rounded-xl border px-3 py-2 text-sm font-semibold"
+          style={{ borderColor: LINE, color: INK }}
+        />
+        <input
+          value={nouvelleZone.prix}
+          onChange={(e) => setNouvelleZone({ ...nouvelleZone, prix: e.target.value })}
+          placeholder="Frais (F)"
+          type="number"
+          className="w-32 rounded-xl border px-3 py-2 text-sm font-semibold"
+          style={{ borderColor: LINE, color: INK }}
+        />
+        <button onClick={ajouterZone} disabled={ajoutEnCours} className="flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-black text-white" style={{ backgroundColor: GREEN, opacity: ajoutEnCours ? 0.6 : 1 }}>
+          <Plus size={14} /> Ajouter
         </button>
       </div>
-      <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Zone</th>
-              <th className="px-4 py-3">Frais de livraison</th>
-              <th className="px-4 py-3">Distance</th>
-              <th className="px-4 py-3">Temps estimé</th>
-              <th className="px-4 py-3">Livraison gratuite dès</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {ZONES.map((z) => (
-              <tr key={z.zone} className="border-t" style={{ borderColor: LINE }}>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>
-                  <span className="inline-flex items-center gap-1.5"><MapPin size={14} style={{ color: OCHRE }} />{z.zone}</span>
-                </td>
-                <td className="px-4 py-3 font-bold" style={{ color: INK }}>{fmt(z.prix)}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{z.distance}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{z.temps}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{fmt(z.gratuitDes)}</td>
-                <td className="px-4 py-3 text-right"><PenLine size={16} style={{ color: MUTED }} /></td>
+
+      <EtatChargement erreur={erreurZones} chargement={chargementZones} />
+      {!chargementZones && !erreurZones && (
+        <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                <th className="px-4 py-3">Zone</th>
+                <th className="px-4 py-3">Frais de livraison</th>
+                <th className="px-4 py-3">Distance</th>
+                <th className="px-4 py-3">Temps estimé</th>
+                <th className="px-4 py-3">Livraison gratuite dès</th>
+                <th className="px-4 py-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {zones.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucune zone pour le moment</td></tr>
+              )}
+              {zones.map((z) => (
+                <tr key={z.id} className="border-t" style={{ borderColor: LINE }}>
+                  <td className="px-4 py-3 font-black" style={{ color: INK }}>
+                    <span className="inline-flex items-center gap-1.5"><MapPin size={14} style={{ color: OCHRE }} />{z.zone}</span>
+                  </td>
+                  <td className="px-4 py-3 font-bold" style={{ color: INK }}>{fmt(z.prix)}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{z.distance || "—"}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{z.temps_estime || "—"}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{z.livraison_gratuite_des ? fmt(z.livraison_gratuite_des) : "—"}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => supprimerZone(z.id)} className="text-xs font-black" style={{ color: RED }}>Supprimer</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <SectionTitle>Livreurs</SectionTitle>
-      <div className="grid grid-cols-2 gap-3">
-        {LIVREURS.map((l) => {
-          const s = LIVREUR_STATUT_STYLE[l.statut];
-          return (
-            <div key={l.nom} className="flex items-center gap-3 rounded-2xl border bg-white p-4" style={{ borderColor: LINE }}>
+      <EtatChargement erreur={erreurLivreurs} chargement={chargementLivreurs} />
+      {!chargementLivreurs && !erreurLivreurs && (
+        <div className="grid grid-cols-2 gap-3">
+          {(livreurs || []).length === 0 && (
+            <p className="text-sm font-bold" style={{ color: MUTED }}>Aucun livreur n'a encore accepté de commande.</p>
+          )}
+          {(livreurs || []).map((l) => (
+            <div key={l.livreur_telephone} className="flex items-center gap-3 rounded-2xl border bg-white p-4" style={{ borderColor: LINE }}>
               <div className="flex h-11 w-11 items-center justify-center rounded-full" style={{ backgroundColor: SAND }}>
                 <Bike size={20} style={{ color: OCHRE }} />
               </div>
               <div className="flex-1">
-                <p className="font-black" style={{ color: INK }}>{l.nom}</p>
-                <p className="text-xs font-semibold" style={{ color: MUTED }}>{l.mission}</p>
+                <p className="font-black" style={{ color: INK }}>{l.livreur_nom}</p>
+                <p className="text-xs font-semibold" style={{ color: MUTED }}>{l.livreur_telephone}{l.en_livraison ? ` · ${l.derniere_commande_numero}` : ""}</p>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span className="rounded-full px-2.5 py-1 text-[10px] font-black" style={{ backgroundColor: s.bg, color: s.color }}>
-                  {l.statut}
+                <span
+                  className="rounded-full px-2.5 py-1 text-[10px] font-black"
+                  style={l.en_livraison ? { backgroundColor: "#FBEBD1", color: GOLD } : { backgroundColor: "#E4EEE8", color: GREEN }}
+                >
+                  {l.en_livraison ? "En livraison" : "Disponible"}
                 </span>
-                <span className="text-[10px] font-bold" style={{ color: MUTED }}>{l.livraisonsJour} livraisons aujourd'hui</span>
+                <span className="text-[10px] font-bold" style={{ color: MUTED }}>{l.livraisons_jour} livraisons aujourd'hui</span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function FinancePage() {
+  const [version, setVersion] = useState(0);
+  const { data: kpis, erreur: erreurKpis, chargement: chargementKpis } = useApiData(() => api.financeKpis(), [version]);
+  const { data: commandes, erreur: erreurCommandes, chargement: chargementCommandes } = useApiData(() => api.commandes(), [version]);
+
+  const styleStatutPaiement = {
+    "Payé": { bg: "#E4EEE8", color: GREEN },
+    "En attente": { bg: "#F1E4C4", color: OCHRE },
+    "Remboursé": { bg: "#F7E4E2", color: RED },
+  };
+
+  const changerStatutPaiement = async (id, statut_paiement) => {
+    try {
+      await api.majCommande(id, { statut_paiement });
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div className="mb-5 flex gap-4">
-        <KpiCard label="Chiffre d'affaires" value={fmt(11700000)} delta="8%" icon={TrendingUp} accent={GREEN} />
-        <KpiCard label="Encaissé" value={fmt(9840000)} delta="6%" icon={CircleDollarSign} accent={GREEN} />
-        <KpiCard label="Remboursements" value={fmt(512000)} delta="2%" positive={false} icon={TrendingDown} accent={RED} />
-        <KpiCard label="Frais de livraison" value={fmt(680000)} delta="4%" icon={Truck} accent={OCHRE} />
-        <KpiCard label="Marge estimée" value={fmt(2950000)} delta="9%" icon={PiggyBank} accent={OCHRE} />
+      <div className="mb-2 rounded-xl px-4 py-2 text-xs font-bold" style={{ backgroundColor: "#FBEBD1", color: OCHRE }}>
+        "Encaissé" et "Remboursé" dépendent du statut de paiement que vous cochez vous-même ci-dessous (il n'y a pas encore de confirmation automatique par les opérateurs Mobile Money).
       </div>
+      <EtatChargement erreur={erreurKpis} chargement={chargementKpis} />
+      {!chargementKpis && !erreurKpis && kpis && (
+        <div className="mb-5 flex gap-4">
+          <KpiCard label="Chiffre d'affaires" value={fmt(Number(kpis.chiffre_affaires))} icon={TrendingUp} accent={GREEN} />
+          <KpiCard label="Encaissé" value={fmt(Number(kpis.encaisse))} icon={CircleDollarSign} accent={GREEN} />
+          <KpiCard label="Remboursements" value={fmt(Number(kpis.rembourse))} positive={false} icon={TrendingDown} accent={RED} />
+          <KpiCard label="Frais de livraison" value={fmt(Number(kpis.frais_livraison))} icon={Truck} accent={OCHRE} />
+          <KpiCard label="Commandes livrées" value={String(kpis.commandes_livrees)} icon={CheckCircle2} accent={OCHRE} />
+        </div>
+      )}
 
-      <SectionTitle>Dernières transactions</SectionTitle>
-      <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Transaction</th>
-              <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Moyen</th>
-              <th className="px-4 py-3">Montant</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="px-4 py-3">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {TRANSACTIONS.map((t) => {
-              const s = TRX_STATUT_STYLE[t.statut];
-              return (
-                <tr key={t.id} className="border-t" style={{ borderColor: LINE }}>
-                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{t.id}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{t.client}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{t.moyen}</td>
-                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(t.montant)}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: s.bg, color: s.color }}>{t.statut}</span>
-                  </td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{t.date}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <SectionTitle>Rapprochement commande ↔ paiement ↔ livraison ↔ facture</SectionTitle>
-      <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Commande</th>
-              <th className="px-4 py-3">Paiement</th>
-              <th className="px-4 py-3">Livraison</th>
-              <th className="px-4 py-3">Facture</th>
-            </tr>
-          </thead>
-          <tbody>
-            {RAPPROCHEMENT.map((r) => (
-              <tr key={r.commande} className="border-t" style={{ borderColor: LINE }}>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>
-                  <span className="inline-flex items-center gap-1.5"><ArrowRightLeft size={13} style={{ color: OCHRE }} />{r.commande}</span>
-                </td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{r.paiement}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{r.livraison}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{r.facture}</td>
+      <SectionTitle>Commandes & paiements</SectionTitle>
+      <EtatChargement erreur={erreurCommandes} chargement={chargementCommandes} />
+      {!chargementCommandes && !erreurCommandes && (
+        <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                <th className="px-4 py-3">Commande</th>
+                <th className="px-4 py-3">Client</th>
+                <th className="px-4 py-3">Moyen</th>
+                <th className="px-4 py-3">Montant</th>
+                <th className="px-4 py-3">Statut commande</th>
+                <th className="px-4 py-3">Statut paiement</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {(commandes || []).length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucune commande pour le moment</td></tr>
+              )}
+              {(commandes || []).map((c) => {
+                const s = styleStatutPaiement[c.statut_paiement] || styleStatutPaiement["En attente"];
+                return (
+                  <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
+                    <td className="px-4 py-3 font-black" style={{ color: INK }}>
+                      <span className="inline-flex items-center gap-1.5"><ArrowRightLeft size={13} style={{ color: OCHRE }} />{c.numero}</span>
+                    </td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{c.client_nom || c.client_telephone}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.moyen_paiement || "—"}</td>
+                    <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(c.total)}</td>
+                    <td className="px-4 py-3"><StatutBadge statut={c.statut} /></td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={c.statut_paiement}
+                        onChange={(e) => changerStatutPaiement(c.id, e.target.value)}
+                        className="rounded-full border px-2 py-1 text-xs font-bold"
+                        style={{ borderColor: LINE, backgroundColor: s.bg, color: s.color }}
+                      >
+                        <option value="En attente">En attente</option>
+                        <option value="Payé">Payé</option>
+                        <option value="Remboursé">Remboursé</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -952,6 +1067,9 @@ function RapportsPage() {
     { key: "clients", label: "Clients" },
     { key: "livraison", label: "Livraison" },
   ];
+  const { data: ventesProduits, erreur: erreurVentes, chargement: chargementVentes } = useApiData(() => api.rapportVentesProduits(), []);
+  const { data: clientsMois, erreur: erreurClients, chargement: chargementClients } = useApiData(() => api.rapportClientsMois(), []);
+  const { data: perfLivreurs, erreur: erreurPerf, chargement: chargementPerf } = useApiData(() => api.rapportPerfLivreurs(), []);
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -974,53 +1092,177 @@ function RapportsPage() {
 
       {onglet === "ventes" && (
         <div className="rounded-2xl border bg-white p-5" style={{ borderColor: LINE }}>
-          <p className="mb-4 text-sm font-black" style={{ color: INK }}>Ventes par produit — 30 derniers jours</p>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={VENTES_PAR_PRODUIT}>
-              <CartesianGrid vertical={false} stroke={LINE} />
-              <XAxis dataKey="produit" tick={{ fontSize: 12, fill: MUTED, fontWeight: 700 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000000}M`} />
-              <Tooltip formatter={(v) => fmt(v)} contentStyle={{ borderRadius: 12, borderColor: LINE }} />
-              <Bar dataKey="ventes" fill={GREEN} radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <p className="mb-4 text-sm font-black" style={{ color: INK }}>Ventes par produit (toutes les commandes réelles)</p>
+          <EtatChargement erreur={erreurVentes} chargement={chargementVentes} />
+          {!chargementVentes && !erreurVentes && (ventesProduits || []).length === 0 && (
+            <p className="text-sm font-bold" style={{ color: MUTED }}>Pas encore de vente enregistrée.</p>
+          )}
+          {!chargementVentes && !erreurVentes && (ventesProduits || []).length > 0 && (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={ventesProduits.map((v) => ({ ...v, ventes: Number(v.ventes) }))}>
+                <CartesianGrid vertical={false} stroke={LINE} />
+                <XAxis dataKey="produit" tick={{ fontSize: 12, fill: MUTED, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v) => fmt(v)} contentStyle={{ borderRadius: 12, borderColor: LINE }} />
+                <Bar dataKey="ventes" fill={GREEN} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
 
       {onglet === "clients" && (
         <div className="rounded-2xl border bg-white p-5" style={{ borderColor: LINE }}>
-          <p className="mb-4 text-sm font-black" style={{ color: INK }}>Nouveaux clients & clients actifs — 5 derniers mois</p>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={CLIENTS_MOIS}>
-              <CartesianGrid vertical={false} stroke={LINE} />
-              <XAxis dataKey="mois" tick={{ fontSize: 12, fill: MUTED, fontWeight: 700 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ borderRadius: 12, borderColor: LINE }} />
-              <Line type="monotone" dataKey="actifs" stroke={GREEN} strokeWidth={3} dot={{ r: 4 }} name="Clients actifs" />
-              <Line type="monotone" dataKey="nouveaux" stroke={GOLD} strokeWidth={3} dot={{ r: 4 }} name="Nouveaux clients" />
-            </LineChart>
-          </ResponsiveContainer>
+          <p className="mb-4 text-sm font-black" style={{ color: INK }}>Nouveaux clients par mois (inscriptions réelles)</p>
+          <EtatChargement erreur={erreurClients} chargement={chargementClients} />
+          {!chargementClients && !erreurClients && (clientsMois || []).length === 0 && (
+            <p className="text-sm font-bold" style={{ color: MUTED }}>Pas encore de client inscrit.</p>
+          )}
+          {!chargementClients && !erreurClients && (clientsMois || []).length > 0 && (
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={clientsMois.map((c) => ({ ...c, nouveaux: Number(c.nouveaux) }))}>
+                <CartesianGrid vertical={false} stroke={LINE} />
+                <XAxis dataKey="mois" tick={{ fontSize: 12, fill: MUTED, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: 12, borderColor: LINE }} />
+                <Line type="monotone" dataKey="nouveaux" stroke={GOLD} strokeWidth={3} dot={{ r: 4 }} name="Nouveaux clients" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
 
       {onglet === "livraison" && (
+        <>
+          <EtatChargement erreur={erreurPerf} chargement={chargementPerf} />
+          {!chargementPerf && !erreurPerf && (
+            <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                    <th className="px-4 py-3">Livreur</th>
+                    <th className="px-4 py-3">Livraisons</th>
+                    <th className="px-4 py-3">Temps moyen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(perfLivreurs || []).length === 0 && (
+                    <tr><td colSpan={3} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Pas encore de livraison enregistrée</td></tr>
+                  )}
+                  {(perfLivreurs || []).map((p) => (
+                    <tr key={p.livreur_nom} className="border-t" style={{ borderColor: LINE }}>
+                      <td className="px-4 py-3 font-black" style={{ color: INK }}>{p.livreur_nom}</td>
+                      <td className="px-4 py-3 font-bold" style={{ color: INK }}>{p.livraisons}</td>
+                      <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.temps_moyen_minutes != null ? `${p.temps_moyen_minutes} min` : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function UtilisateursPage() {
+  const [version, setVersion] = useState(0);
+  const { data: staff, erreur, chargement } = useApiData(() => api.staff(), [version]);
+  const [nouveau, setNouveau] = useState({ nom: "", email: "", role: "Commercial" });
+  const [ajoutEnCours, setAjoutEnCours] = useState(false);
+  const roles = Object.keys(ROLE_STYLE);
+
+  const ajouter = async () => {
+    if (!nouveau.nom || !nouveau.email) return;
+    setAjoutEnCours(true);
+    try {
+      await api.creerStaff(nouveau);
+      setNouveau({ nom: "", email: "", role: "Commercial" });
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    } finally {
+      setAjoutEnCours(false);
+    }
+  };
+
+  const basculerActif = async (u) => {
+    try {
+      await api.majStaff(u.id, { actif: !u.actif });
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    }
+  };
+
+  const supprimer = async (id) => {
+    try {
+      await api.supprimerStaff(id);
+      setVersion((v) => v + 1);
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="mb-2 rounded-xl px-4 py-2 text-xs font-bold" style={{ backgroundColor: "#FBEBD1", color: OCHRE }}>
+        Ceci est le vrai répertoire de votre équipe. L'accès au back-office reste pour l'instant par mot de passe unique partagé — une connexion individuelle par personne est un chantier séparé.
+      </div>
+      <div className="mb-4 flex items-end gap-2">
+        <input value={nouveau.nom} onChange={(e) => setNouveau({ ...nouveau, nom: e.target.value })} placeholder="Nom" className="rounded-xl border px-3 py-2 text-sm font-semibold" style={{ borderColor: LINE, color: INK }} />
+        <input value={nouveau.email} onChange={(e) => setNouveau({ ...nouveau, email: e.target.value })} placeholder="Email" className="rounded-xl border px-3 py-2 text-sm font-semibold" style={{ borderColor: LINE, color: INK }} />
+        <select value={nouveau.role} onChange={(e) => setNouveau({ ...nouveau, role: e.target.value })} className="rounded-xl border px-3 py-2 text-sm font-semibold" style={{ borderColor: LINE, color: INK }}>
+          {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <button onClick={ajouter} disabled={ajoutEnCours} className="flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-black text-white" style={{ backgroundColor: GREEN, opacity: ajoutEnCours ? 0.6 : 1 }}>
+          <Plus size={14} /> Ajouter
+        </button>
+      </div>
+
+      <EtatChargement erreur={erreur} chargement={chargement} />
+      {!chargement && !erreur && (
         <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
           <table className="w-full text-left text-sm">
             <thead>
               <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-                <th className="px-4 py-3">Livreur</th>
-                <th className="px-4 py-3">Livraisons</th>
-                <th className="px-4 py-3">Temps moyen</th>
-                <th className="px-4 py-3">Taux de retard</th>
+                <th className="px-4 py-3">Utilisateur</th>
+                <th className="px-4 py-3">Rôle</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Statut</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
-              {PERF_LIVREURS.map((p) => (
-                <tr key={p.nom} className="border-t" style={{ borderColor: LINE }}>
-                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{p.nom}</td>
-                  <td className="px-4 py-3 font-bold" style={{ color: INK }}>{p.livraisons}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.tempsMoyen}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.retards}</td>
+              {(staff || []).length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucun utilisateur pour le moment</td></tr>
+              )}
+              {(staff || []).map((u) => (
+                <tr key={u.id} className="border-t" style={{ borderColor: LINE }}>
+                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{u.nom}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full px-2.5 py-1 text-xs font-black text-white" style={{ backgroundColor: ROLE_STYLE[u.role] || MUTED }}>
+                      {u.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{u.email}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => basculerActif(u)}>
+                      {u.actif ? (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#E4EEE8", color: GREEN }}>
+                          <CheckCircle2 size={12} /> Actif
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#EFEAE0", color: MUTED }}>
+                          <Ban size={12} /> Inactif
+                        </span>
+                      )}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => supprimer(u.id)} className="text-xs font-black" style={{ color: RED }}>Supprimer</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1031,176 +1273,130 @@ function RapportsPage() {
   );
 }
 
-function UtilisateursPage() {
-  return (
-    <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div className="mb-4 flex items-center justify-between">
-        <SectionTitle>Comptes internes</SectionTitle>
-        <button className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black text-white" style={{ backgroundColor: GREEN }}>
-          <Plus size={14} /> Inviter un utilisateur
-        </button>
-      </div>
-      <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Utilisateur</th>
-              <th className="px-4 py-3">Rôle</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {UTILISATEURS.map((u) => (
-              <tr key={u.nom} className="border-t" style={{ borderColor: LINE }}>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>{u.nom}</td>
-                <td className="px-4 py-3">
-                  <span className="rounded-full px-2.5 py-1 text-xs font-black text-white" style={{ backgroundColor: ROLE_STYLE[u.role] || MUTED }}>
-                    {u.role}
-                  </span>
-                </td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{u.email}</td>
-                <td className="px-4 py-3">
-                  {u.statut === "Actif" ? (
-                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#E4EEE8", color: GREEN }}>
-                      <CheckCircle2 size={12} /> Actif
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: "#EFEAE0", color: MUTED }}>
-                      <Ban size={12} /> Inactif
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right"><PenLine size={16} style={{ color: MUTED }} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 function SuiviLivePage() {
   const [selection, setSelection] = useState(null);
+  const { data: commandes, erreur, chargement } = useApiData(() => api.commandes(), []);
   const centre = [5.35, -3.99]; // Abidjan
+
+  const avecGPS = (commandes || []).filter((c) => c.client_lat != null && c.client_lng != null);
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-6">
-      <div
-        className="mb-2 rounded-xl px-4 py-2 text-xs font-bold"
-        style={{ backgroundColor: "#FBEBD1", color: OCHRE }}
-      >
-        Données d'exemple — se branchera sur les positions GPS et confirmations de paiement réelles une fois l'API connectée.
-      </div>
+      <EtatChargement erreur={erreur} chargement={chargement} />
+      {!chargement && !erreur && (
+        <>
+          <SectionTitle>Positions en direct</SectionTitle>
+          <div className="mb-6 overflow-hidden rounded-2xl border" style={{ borderColor: LINE, height: 380 }}>
+            <MapContainer center={centre} zoom={12} style={{ height: "100%", width: "100%" }}>
+              <TileLayer
+                attribution='&copy; OpenStreetMap contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {avecGPS.map((c) => (
+                <React.Fragment key={c.id}>
+                  <Marker position={[c.client_lat, c.client_lng]} icon={iconClient}>
+                    <Popup>
+                      <strong>{c.client_nom || c.client_telephone}</strong> — {c.numero}
+                      <br />
+                      {Number(c.client_lat).toFixed(5)}, {Number(c.client_lng).toFixed(5)}
+                    </Popup>
+                  </Marker>
+                  {c.livreur_lat != null && c.livreur_lng != null && (
+                    <Marker position={[c.livreur_lat, c.livreur_lng]} icon={iconLivreur}>
+                      <Popup>
+                        <strong>{c.livreur_nom}</strong> → {c.numero}
+                        <br />
+                        {Number(c.livreur_lat).toFixed(5)}, {Number(c.livreur_lng).toFixed(5)}
+                      </Popup>
+                    </Marker>
+                  )}
+                </React.Fragment>
+              ))}
+            </MapContainer>
+          </div>
 
-      <SectionTitle>Positions en direct</SectionTitle>
-      <div className="mb-6 overflow-hidden rounded-2xl border" style={{ borderColor: LINE, height: 380 }}>
-        <MapContainer center={centre} zoom={12} style={{ height: "100%", width: "100%" }}>
-          <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {COMMANDES_GPS.map((c) => (
-            <React.Fragment key={c.id}>
-              <Marker position={[c.clientPos.lat, c.clientPos.lng]} icon={iconClient}>
-                <Popup>
-                  <strong>{c.client}</strong> — {c.id}
-                  <br />
-                  {c.clientPos.lat.toFixed(5)}, {c.clientPos.lng.toFixed(5)}
-                </Popup>
-              </Marker>
-              {c.livreurPos && (
-                <Marker position={[c.livreurPos.lat, c.livreurPos.lng]} icon={iconLivreur}>
-                  <Popup>
-                    <strong>{c.livreur}</strong> → {c.id}
-                    <br />
-                    {c.livreurPos.lat.toFixed(5)}, {c.livreurPos.lng.toFixed(5)}
-                  </Popup>
-                </Marker>
-              )}
-            </React.Fragment>
-          ))}
-        </MapContainer>
-      </div>
-
-      <SectionTitle>Commandes & positions GPS exactes</SectionTitle>
-      <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Commande</th>
-              <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Position GPS client</th>
-              <th className="px-4 py-3">Livreur</th>
-              <th className="px-4 py-3">Position GPS livreur</th>
-              <th className="px-4 py-3">Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {COMMANDES_GPS.map((c) => (
-              <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
-                <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.id}</td>
-                <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{c.client}</td>
-                <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>
-                  {c.clientPos.lat.toFixed(5)}, {c.clientPos.lng.toFixed(5)}
-                </td>
-                <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.livreur || "—"}</td>
-                <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>
-                  {c.livreurPos ? `${c.livreurPos.lat.toFixed(5)}, ${c.livreurPos.lng.toFixed(5)}` : "—"}
-                </td>
-                <td className="px-4 py-3"><StatutBadge statut={c.statut} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <SectionTitle>Preuves de paiement</SectionTitle>
-      <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
-              <th className="px-4 py-3">Commande</th>
-              <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Montant</th>
-              <th className="px-4 py-3">Moyen</th>
-              <th className="px-4 py-3">Référence</th>
-              <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Statut</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {PREUVES_PAIEMENT.map((p) => {
-              const s = TRX_STATUT_STYLE[p.statut];
-              return (
-                <tr key={p.commande} className="border-t" style={{ borderColor: LINE }}>
-                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{p.commande}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{p.client}</td>
-                  <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(p.montant)}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.moyen}</td>
-                  <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>{p.reference}</td>
-                  <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.date}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: s.bg, color: s.color }}>{p.statut}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => setSelection(p)}
-                      className="rounded-full px-3 py-1 text-xs font-black"
-                      style={{ backgroundColor: SAND, color: OCHRE }}
-                    >
-                      Voir la preuve
-                    </button>
-                  </td>
+          <SectionTitle>Commandes & positions GPS exactes</SectionTitle>
+          <div className="mb-6 overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                  <th className="px-4 py-3">Commande</th>
+                  <th className="px-4 py-3">Client</th>
+                  <th className="px-4 py-3">Position GPS client</th>
+                  <th className="px-4 py-3">Livreur</th>
+                  <th className="px-4 py-3">Position GPS livreur</th>
+                  <th className="px-4 py-3">Statut</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {avecGPS.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucune commande avec position GPS pour le moment</td></tr>
+                )}
+                {avecGPS.map((c) => (
+                  <tr key={c.id} className="border-t" style={{ borderColor: LINE }}>
+                    <td className="px-4 py-3 font-black" style={{ color: INK }}>{c.numero}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{c.client_nom || c.client_telephone}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>
+                      {Number(c.client_lat).toFixed(5)}, {Number(c.client_lng).toFixed(5)}
+                    </td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{c.livreur_nom || "—"}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>
+                      {c.livreur_lat != null ? `${Number(c.livreur_lat).toFixed(5)}, ${Number(c.livreur_lng).toFixed(5)}` : "—"}
+                    </td>
+                    <td className="px-4 py-3"><StatutBadge statut={c.statut} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <SectionTitle>Preuves de paiement</SectionTitle>
+          <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: LINE }}>
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr style={{ color: MUTED, backgroundColor: SAND }} className="text-xs font-black uppercase">
+                  <th className="px-4 py-3">Commande</th>
+                  <th className="px-4 py-3">Client</th>
+                  <th className="px-4 py-3">Montant</th>
+                  <th className="px-4 py-3">Moyen</th>
+                  <th className="px-4 py-3">Référence</th>
+                  <th className="px-4 py-3">Statut paiement</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(commandes || []).length === 0 && (
+                  <tr><td colSpan={7} className="px-4 py-6 text-center font-bold" style={{ color: MUTED }}>Aucune commande pour le moment</td></tr>
+                )}
+                {(commandes || []).map((p) => {
+                  const s = TRX_STATUT_STYLE[p.statut_paiement] || TRX_STATUT_STYLE["En attente"];
+                  return (
+                    <tr key={p.id} className="border-t" style={{ borderColor: LINE }}>
+                      <td className="px-4 py-3 font-black" style={{ color: INK }}>{p.numero}</td>
+                      <td className="px-4 py-3 font-semibold" style={{ color: INK }}>{p.client_nom || p.client_telephone}</td>
+                      <td className="px-4 py-3 font-black" style={{ color: INK }}>{fmt(p.total)}</td>
+                      <td className="px-4 py-3 font-semibold" style={{ color: MUTED }}>{p.moyen_paiement || "—"}</td>
+                      <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: MUTED }}>{p.reference_paiement || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span className="rounded-full px-2.5 py-1 text-xs font-black" style={{ backgroundColor: s.bg, color: s.color }}>{p.statut_paiement}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => setSelection(p)}
+                          className="rounded-full px-3 py-1 text-xs font-black"
+                          style={{ backgroundColor: SAND, color: OCHRE }}
+                        >
+                          Voir le détail
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {selection && (
         <div
@@ -1212,17 +1408,17 @@ function SuiviLivePage() {
             className="w-full max-w-sm rounded-2xl bg-white p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="mb-1 text-xs font-black uppercase" style={{ color: OCHRE }}>Preuve de paiement</p>
-            <p className="mb-4 text-lg font-black" style={{ color: INK }}>{selection.commande}</p>
+            <p className="mb-1 text-xs font-black uppercase" style={{ color: OCHRE }}>Détail de la commande</p>
+            <p className="mb-4 text-lg font-black" style={{ color: INK }}>{selection.numero}</p>
             <div className="mb-4 flex h-40 items-center justify-center rounded-xl" style={{ backgroundColor: SAND }}>
               <Receipt size={40} style={{ color: OCHRE }} />
             </div>
             <div className="flex flex-col gap-1.5 text-sm">
-              <div className="flex justify-between"><span style={{ color: MUTED }}>Client</span><span className="font-bold" style={{ color: INK }}>{selection.client}</span></div>
-              <div className="flex justify-between"><span style={{ color: MUTED }}>Montant</span><span className="font-bold" style={{ color: INK }}>{fmt(selection.montant)}</span></div>
-              <div className="flex justify-between"><span style={{ color: MUTED }}>Moyen</span><span className="font-bold" style={{ color: INK }}>{selection.moyen}</span></div>
-              <div className="flex justify-between"><span style={{ color: MUTED }}>Référence</span><span className="font-mono font-bold" style={{ color: INK }}>{selection.reference}</span></div>
-              <div className="flex justify-between"><span style={{ color: MUTED }}>Date</span><span className="font-bold" style={{ color: INK }}>{selection.date}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Client</span><span className="font-bold" style={{ color: INK }}>{selection.client_nom || selection.client_telephone}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Montant</span><span className="font-bold" style={{ color: INK }}>{fmt(selection.total)}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Moyen</span><span className="font-bold" style={{ color: INK }}>{selection.moyen_paiement || "—"}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Référence</span><span className="font-mono font-bold" style={{ color: INK }}>{selection.reference_paiement || "—"}</span></div>
+              <div className="flex justify-between"><span style={{ color: MUTED }}>Statut paiement</span><span className="font-bold" style={{ color: INK }}>{selection.statut_paiement}</span></div>
             </div>
             <button
               onClick={() => setSelection(null)}
