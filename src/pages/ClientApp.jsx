@@ -30,10 +30,6 @@ import {
 } from "lucide-react";
 import { api, calculerItineraire } from "../api.js";
 
-// ---- Données ----
-// Les produits ne sont plus codés en dur : ils sont chargés depuis l'API
-// réelle (voir fetchProduits dans le composant racine ClientApp).
-
 const RECOMMANDE = [
   { nom: "20 Poulets", detail: "Commande habituelle" },
   { nom: "5kg Cuisses + 3 plateaux d'œufs", detail: "Il y a 4 jours" },
@@ -92,7 +88,6 @@ const TYPES_ACTIVITE = [
 
 const COMMANDE_MINIMUM_QTE = 5; // articles
 
-// ---- Sauvegarde locale (survit aux rechargements de page) ----
 const STOCKAGE_CLE = "mcm_client_v1";
 
 function chargerEtatSauvegarde() {
@@ -112,8 +107,6 @@ function sauvegarderEtat(etat) {
   }
 }
 
-// Demande la vraie position GPS de l'appareil, puis tente de la transformer
-// en adresse lisible (service gratuit OpenStreetMap, sans clé requise).
 async function obtenirPositionReelle(labelParDefaut) {
   const position = await new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -139,8 +132,6 @@ async function obtenirPositionReelle(labelParDefaut) {
   }
   return { label: labelParDefaut, detail, lat, lng };
 }
-
-// ---- Composants génériques ----
 
 function Stamp() {
   return (
@@ -242,8 +233,6 @@ function ProductImage({ product, size = 20 }) {
   );
 }
 
-// Fenêtre superposée (bottom sheet) — tout ce qui n'est pas un des 2 écrans
-// principaux passe par ici : onboarding, finaliser, compte, réclamation, support.
 function GlobalAnimStyles() {
   return (
     <style>{`
@@ -344,7 +333,6 @@ function CarteTrajet({ progression }) {
   );
 }
 
-// ---- Fenêtre : Inscription (téléphone → OTP → profil → localisation) ----
 function OnboardingSheet({ open, profil, setProfil, adresses, setAdresses, onTermine }) {
   const [etape, setEtape] = useState("identite");
   const [otp, setOtp] = useState("");
@@ -436,7 +424,6 @@ function OnboardingSheet({ open, profil, setProfil, adresses, setAdresses, onTer
   );
 }
 
-// ---- Fenêtre : Finaliser (livraison + paiement) ----
 function FinaliserSheet({ open, onClose, panier, produits, livraison, setLivraison, adresses, dernierPaiement, setDernierPaiement, onConfirmer }) {
   const [adresseOuverte, setAdresseOuverte] = useState(!livraison);
   const [choixPaiement, setChoixPaiement] = useState(dernierPaiement || "orange");
@@ -559,7 +546,6 @@ function FinaliserSheet({ open, onClose, panier, produits, livraison, setLivrais
   );
 }
 
-// ---- Fenêtre : Mon compte ----
 function CompteSheet({ open, onClose, profil, setProfil }) {
   return (
     <Sheet open={open} onClose={onClose} title="Mon compte">
@@ -600,7 +586,6 @@ function CompteSheet({ open, onClose, profil, setProfil }) {
   );
 }
 
-// ---- Fenêtre : Nouvelle réclamation ----
 function ReclamationSheet({ open, onClose, onEnvoyer }) {
   const [commande, setCommande] = useState(COMMANDES_RECENTES[0].id);
   const [motif, setMotif] = useState(null);
@@ -666,7 +651,6 @@ function ReclamationSheet({ open, onClose, onEnvoyer }) {
   );
 }
 
-// ---- Fenêtre : Support ----
 function SupportSheet({ open, onClose }) {
   const [messages, setMessages] = useState(MESSAGES_SUPPORT_INIT);
   const [texte, setTexte] = useState("");
@@ -703,7 +687,6 @@ function SupportSheet({ open, onClose }) {
   );
 }
 
-// ---- Barre du haut commune (avatar -> Mon compte) ----
 function TopBar2({ titre, sousTitre, onAvatar }) {
   return (
     <div className="flex items-center justify-between px-5 pb-3 pt-6">
@@ -728,7 +711,6 @@ function TopBar2({ titre, sousTitre, onAvatar }) {
   );
 }
 
-// ---- Onglets du bas : seulement 2 ----
 function BottomNav2({ ecran, setEcran, badge }) {
   const items = [
     { key: "commander", label: "Commander", icon: ShoppingCart },
@@ -749,7 +731,6 @@ function BottomNav2({ ecran, setEcran, badge }) {
   );
 }
 
-// ---- Écran 1 : Commander (accueil + catalogue + panier) ----
 function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profil, produits, produitsChargement, produitsErreur, commandeEnCours, onSuivreCommande }) {
   const [panierOuvert, setPanierOuvert] = useState(false);
   const items = Object.entries(panier).map(([id, q]) => ({ ...produits.find((p) => p.id === id), q })).filter(Boolean);
@@ -865,7 +846,6 @@ function CommanderScreen({ panier, setPanier, onOuvrirCompte, onContinuer, profi
   );
 }
 
-// ---- Écran 2 : Mon espace (suivi + historique + réclamations + support) ----
 function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommande, reclamations, onNouvelleReclamation, onSupport }) {
   const [commandeLive, setCommandeLive] = useState(null);
   const [itineraire, setItineraire] = useState(null);
@@ -1006,7 +986,6 @@ function EspaceScreen({ profil, onOuvrirCompte, commandeEnCours, derniereCommand
   );
 }
 
-// ---- App shell : 2 écrans + fenêtres superposées ----
 export default function ClientApp() {
   const sauvegarde = chargerEtatSauvegarde();
 
@@ -1023,8 +1002,6 @@ export default function ClientApp() {
   const [produitsChargement, setProduitsChargement] = useState(true);
   const [produitsErreur, setProduitsErreur] = useState(null);
 
-  // Si le profil est déjà connu (sauvegardé lors d'une visite précédente),
-  // on ne redemande pas l'inscription à chaque fois.
   const [onboardingOuvert, setOnboardingOuvert] = useState(!sauvegarde?.profil?.telephone);
   const [finaliserOuvert, setFinaliserOuvert] = useState(false);
   const [compteOuvert, setCompteOuvert] = useState(false);
@@ -1032,13 +1009,10 @@ export default function ClientApp() {
   const [supportOuvert, setSupportOuvert] = useState(false);
   const [commandeEnCours, setCommandeEnCours] = useState(sauvegarde?.commandeEnCours || false);
 
-  // Sauvegarde automatique sur l'appareil à chaque changement important,
-  // pour ne pas tout perdre si la page se recharge ou si le téléphone se verrouille.
   useEffect(() => {
     sauvegarderEtat({ profil, adresses, livraison, dernierPaiement, derniereCommande, commandeEnCours });
   }, [profil, adresses, livraison, dernierPaiement, derniereCommande, commandeEnCours]);
 
-  // Chargement du vrai catalogue depuis l'API au démarrage.
   useEffect(() => {
     let annule = false;
     api.produits()
@@ -1062,7 +1036,6 @@ export default function ClientApp() {
     return () => { annule = true; };
   }, []);
 
-  // Enregistre réellement le client (créé ou mis à jour en base) à la fin de l'inscription.
   const enregistrerProfil = async (position) => {
     try {
       await api.enregistrerClient({
@@ -1079,7 +1052,6 @@ export default function ClientApp() {
     setOnboardingOuvert(false);
   };
 
-  // Envoie réellement la commande à l'API (stock déduit en base, numéro réel renvoyé).
   const confirmerCommande = async ({ items, adresse_label, adresse_detail, adresse_lat, adresse_lng, zone, moyen_paiement }) => {
     const resultat = await api.creerCommande({
       telephone: profil.telephone,
